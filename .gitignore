@@ -1,0 +1,8 @@
+**/node_modules/
+*.log
+.env
+.env.*
+server/.env
+client/.env
+dist/
+.git-old-backup/

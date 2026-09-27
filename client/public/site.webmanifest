@@ -1,0 +1,17 @@
+{
+  "name": "PurainaMarket",
+  "short_name": "PurainaMarket",
+  "description": "Fresh groceries and everyday essentials, delivered fast.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f4c93d",
+  "icons": [
+    {
+      "src": "/puraina-icon.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
