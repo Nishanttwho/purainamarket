@@ -7,15 +7,20 @@ import { store } from './store/store.js'
 import { Provider } from 'react-redux'
 import { CartProvider } from './provider/CartContext.jsx'
 import { AddressProvider } from './provider/AddressContext.jsx'
+import { GoogleOAuthProvider } from '@react-oauth/google'
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
 createRoot(document.getElementById('root')).render(
-  <Provider store={store}>
-    <AddressProvider>
-      <CartProvider>
-        <RouterProvider router={router}>
-            <App />
-        </RouterProvider>
-      </CartProvider>
-    </AddressProvider>
-  </Provider>
+  <GoogleOAuthProvider clientId={googleClientId}>
+    <Provider store={store}>
+      <AddressProvider>
+        <CartProvider>
+          <RouterProvider router={router}>
+              <App />
+          </RouterProvider>
+        </CartProvider>
+      </AddressProvider>
+    </Provider>
+  </GoogleOAuthProvider>
 )

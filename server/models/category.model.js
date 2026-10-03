@@ -8,6 +8,15 @@ const categorySchema = new mongoose.Schema({
     image: {
         type: String,
         default: ""
+    },
+    handlingFee: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    handlingFeeEnabled: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true

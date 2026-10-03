@@ -13,6 +13,7 @@ import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import GridLoader from "react-spinners/GridLoader";
 import { IoSearchSharp } from "react-icons/io5";
+import NoData from "../components/NoData";
 
 function SubCategory() {
     const [openUploadSubCategoryModel, setOpenUploadSubCategoryModel] = useState(false);
@@ -137,7 +138,7 @@ function SubCategory() {
     );
 
     return (
-        <section>
+            <section className="admin-managed-page admin-subcategory-page">
             <div className="p-2 bg-white shadow-xl flex items-center justify-between sticky top-0 z-10">
                 <h2 className="font-semibold">Sub Category</h2>
                 <div className="flex gap-2">
@@ -162,12 +163,11 @@ function SubCategory() {
                     className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-500"
                 />
             </div>
-            <div>
-                <DisplayTable 
-                    data={filteredData}
-                    columns={columns} 
-                />
-            </div>
+            {filteredData.length ? (
+                <DisplayTable data={filteredData} columns={columns} />
+            ) : (
+                <NoData message={data.length ? "No subcategories match this search" : "No subcategories found"} subMessage="Add a subcategory or try another search." />
+            )}
             {openUploadSubCategoryModel && (
                 <UploadSubCategoryModel 
                     close={() => setOpenUploadSubCategoryModel(false)}

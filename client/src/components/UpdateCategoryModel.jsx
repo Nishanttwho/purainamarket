@@ -16,6 +16,8 @@ function UpdateCategoryModel({ close, category, fetchCategory }) {
         categoryId: category._id,
         name: category.name,
         image: category.image,
+        handlingFee: category.handlingFee ?? 0,
+        handlingFeeEnabled: category.handlingFeeEnabled ?? false,
     });
     // console.log("data :", data);
     const [loading, setLoading] = useState(false);
@@ -83,6 +85,8 @@ function UpdateCategoryModel({ close, category, fetchCategory }) {
                     categoryId: data.categoryId,
                     name: data.name,
                     image: data.image,
+                    handlingFee: Number(data.handlingFee) || 0,
+                    handlingFeeEnabled: data.handlingFeeEnabled,
                 }
             });
             // console.log("response: ", response);
@@ -127,6 +131,14 @@ function UpdateCategoryModel({ close, category, fetchCategory }) {
                             />
                         </div>
 
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <label className="flex flex-col gap-1 text-sm font-medium">Handling fee (₹)
+                                <input type="number" min="0" step="0.01" name="handlingFee" value={data.handlingFee} onChange={handleChange} className="p-2 border border-gray-300 rounded-md" />
+                            </label>
+                            <label className="flex min-h-11 items-center gap-2 self-end text-sm font-medium">
+                                <input type="checkbox" checked={data.handlingFeeEnabled} onChange={(event) => setData((prev) => ({ ...prev, handlingFeeEnabled: event.target.checked }))} /> Apply this handling fee
+                            </label>
+                        </div>
                         {/* Image Upload Section */}
                         <div className="flex flex-col">
                             <p className="text-gray-700 font-medium mb-1">Image</p>

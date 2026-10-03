@@ -6,8 +6,10 @@ import deleteImgCloudinary from "../utils/deleteImgCloudinary.js";
 export const addCategoryController = async (req, res) => {
     try {
         const { name, image } = req.body;
+        const handlingFee = Number(req.body.handlingFee ?? 0);
+        const handlingFeeEnabled = req.body.handlingFeeEnabled === true || req.body.handlingFeeEnabled === "true";
 
-        if (!name || !image) {
+        if (!name || !image || !Number.isFinite(handlingFee) || handlingFee < 0) {
             return res.status(400).json({
                 message: "Both category name and image are required.",
                 error: true,
@@ -15,7 +17,7 @@ export const addCategoryController = async (req, res) => {
             });
         }
 
-        const newCategory = new CategoryModel({ name, image });
+        const newCategory = new CategoryModel({ name, image, handlingFee, handlingFeeEnabled });
         const savedCategory = await newCategory.save();
 
         if (!savedCategory) {
@@ -73,6 +75,9 @@ export const getCategoryController = async (req, res) => {
 export const updateCategoryController = async (req, res) => {
     try {
         const { categoryId, name, image } = req.body;
+        const handlingFee = Number(req.body.handlingFee ?? 0);
+        const handlingFeeEnabled = req.body.handlingFeeEnabled === true || req.body.handlingFeeEnabled === "true";
+        if (!Number.isFinite(handlingFee) || handlingFee < 0) return res.status(400).json({ message: "Handling fee must be zero or greater.", error: true, success: false });
 
         // Fetch the existing category
         const existingCategory = await CategoryModel.findById(categoryId);
@@ -85,14 +90,14 @@ export const updateCategoryController = async (req, res) => {
         }
 
         // Delete old image from Cloudinary if it exists
-        if (existingCategory.image) {
+        if (existingCategory.image && existingCategory.image !== image) {
             await deleteImgCloudinary(existingCategory.image, "category");
         }
 
         // Update category
         const updatedCategory = await CategoryModel.findByIdAndUpdate(
             categoryId,
-            { name, image },
+            { name, image, handlingFee, handlingFeeEnabled },
             { new: true }
         );
 

@@ -9,6 +9,10 @@ const summaryApi = {
         url : '/api/user/login',
         method : 'post'
     },
+    googleLogin: {
+        url: '/api/user/google-login',
+        method: 'post'
+    },
     checkAccount : {
         url : '/api/user/check-account',
         method : 'post'
@@ -37,6 +41,20 @@ const summaryApi = {
         url: "/api/user/get-user-details",
         method: "get"
     },
+    getMyReferrals: { url: "/api/user/referrals", method: "get" },
+    getMyCoupons: { url: "/api/coupon/mine", method: "get" },
+    getAdminReferrals: { url: "/api/referral/admin", method: "get" },
+    getAdminUsers: (params = {}) => ({ url: "/api/user/admin/users", method: "get", params }),
+    getAdminUser: (id) => ({ url: `/api/user/admin/users/${encodeURIComponent(id)}`, method: "get" }),
+    updateAdminUserStatus: (id) => ({ url: `/api/user/admin/users/${encodeURIComponent(id)}/status`, method: "put" }),
+    deleteAdminUser: (id) => ({ url: `/api/user/admin/users/${encodeURIComponent(id)}`, method: "delete" }),
+    getStoreStatus: { url: "/api/store/status", method: "get" },
+    getAdminStoreSettings: { url: "/api/store/admin/settings", method: "get" },
+    updateAdminStoreSettings: { url: "/api/store/admin/settings", method: "put" },
+    getDeliveryAreas: { url: "/api/delivery-areas", method: "get" },
+    getActiveDeliveryAreas: { url: "/api/delivery-areas/active", method: "get" },
+    createDeliveryArea: { url: "/api/delivery-areas", method: "post" },
+    updateDeliveryArea: (id) => ({ url: `/api/delivery-areas/${id}`, method: "put" }),
     updateAvatar : {
         url: "/api/user/upload-avatar",
         method: "put"
@@ -161,6 +179,10 @@ const summaryApi = {
         url: "/api/order/add-cash-on-delivery-order",
         method: "post"
     },
+    getCheckoutQuote: {
+        url: "/api/order/checkout-quote",
+        method: "post"
+    },
     addStripPaymentOrder: {
         url: "/api/order/add-stripe-payment-checkout",
         method: "post"
@@ -189,6 +211,62 @@ const summaryApi = {
         url: "/api/order/get-order-details-by-id",
         method: "post"
     },
+    getRiderDashboard: {
+        url: "/api/order/rider/dashboard",
+        method: "get"
+    },
+    getRiderOrder: (orderId) => ({
+        url: `/api/order/rider/orders/${encodeURIComponent(orderId)}`,
+        method: "get"
+    }),
+    acceptRiderOrder: (orderId) => ({
+        url: `/api/order/rider/orders/${encodeURIComponent(orderId)}/accept`,
+        method: "post"
+    }),
+    collectRiderCOD: (orderId) => ({
+        url: `/api/order/rider/orders/${encodeURIComponent(orderId)}/collect-cod`,
+        method: "post"
+    }),
+    deliverRiderOrder: (orderId) => ({
+        url: `/api/order/rider/orders/${encodeURIComponent(orderId)}/deliver`,
+        method: "post"
+    }),
+    cancelRiderOrder: (orderId) => ({
+        url: `/api/order/rider/orders/${encodeURIComponent(orderId)}/cancel`,
+        method: "post"
+    }),
+    getRiderHistory: {
+        url: "/api/order/rider/history",
+        method: "get"
+    },
+    getAdminRiders: {
+        url: "/api/order/admin/riders",
+        method: "get"
+    },
+    createAdminRider: {
+        url: "/api/order/admin/riders",
+        method: "post"
+    },
+    getAdminDashboard: {
+        url: "/api/order/admin/dashboard",
+        method: "get"
+    },
+    validateCoupon: {
+        url: "/api/coupon/validate",
+        method: "post"
+    },
+    getAdminCoupons: {
+        url: "/api/coupon/admin",
+        method: "get"
+    },
+    createAdminCoupon: {
+        url: "/api/coupon/admin",
+        method: "post"
+    },
+    updateAdminCoupon: (id) => ({ url: `/api/coupon/admin/${encodeURIComponent(id)}`, method: "put" }),
+    disableAdminCoupon: (id) => ({ url: `/api/coupon/admin/${encodeURIComponent(id)}`, method: "delete" }),
+    getAdminCouponUsage: (id) => ({ url: `/api/coupon/admin/${encodeURIComponent(id)}/usage`, method: "get" }),
+    searchCouponUsers: (search) => ({ url: `/api/coupon/admin/users?search=${encodeURIComponent(search)}`, method: "get" }),
 }
 
 export default summaryApi

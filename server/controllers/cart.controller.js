@@ -133,7 +133,7 @@ export const updateCartItemQuantityController = async (req, res) => {
         }
 
         // Find the cart item and populate the product details
-        const cartItem = await CartProductModel.findOne({ _id }).populate('productId');
+        const cartItem = await CartProductModel.findOne({ _id, userId }).populate('productId');
         if (!cartItem) {
             return res.status(404).json({
                 message: "Cart item not found.",
@@ -159,8 +159,12 @@ export const updateCartItemQuantityController = async (req, res) => {
             });
         }
 
+        if (!Number.isInteger(Number(quantity)) || Number(quantity) < 1) {
+            return res.status(400).json({ message: "Quantity must be a positive whole number.", error: true, success: false });
+        }
+
         // Check if requested quantity is greater than available stock
-        if (quantity > product.stock) {
+        if (product.stock !== null && Number(quantity) > product.stock) {
             return res.status(400).json({
                 message: `Only ${product.stock} items available in stock.`,
                 error: true,
@@ -170,8 +174,8 @@ export const updateCartItemQuantityController = async (req, res) => {
 
         // Update cart item quantity
         const updateCartItem = await CartProductModel.updateOne(
-            { _id },
-            { quantity }
+            { _id, userId },
+            { quantity: Number(quantity) }
         );
 
         return res.status(200).json({
@@ -212,7 +216,7 @@ export const deleteItemFromCartController = async (req, res) => {
             })
         }
 
-        const deleteCartItem  = await CartProductModel.deleteOne({ _id : _id })
+        const deleteCartItem  = await CartProductModel.deleteOne({ _id, userId })
 
         return res.json({
             message : "Product deleted from cart successfully.",

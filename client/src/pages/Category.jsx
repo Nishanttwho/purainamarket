@@ -9,6 +9,8 @@ import NoData from "../components/NoData"
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import UpdateCategoryModel from "../components/UpdateCategoryModel"
+import { Link } from "react-router-dom";
+import { Plus, Search, Tags } from "lucide-react";
 // import { useSelector } from "react-redux"
 
 function Category() {
@@ -20,6 +22,7 @@ function Category() {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [deleteCategoryId, setDeleteCategoryId] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const handleOpenUpdateCategoryModel = (category) => {
         setSelectedCategory(category);
@@ -82,57 +85,72 @@ function Category() {
         } catch (error) {
             AxiosToastError(error);
         } finally {
-            setLoading(true);
+            setLoading(false);
         }
     };
 
+    const filteredCategories = categoryData.filter((category) => category.name.toLowerCase().includes(searchQuery.trim().toLowerCase()));
+
     return (
-        <section>
-            <div className="p-2 bg-white shadow-xl flex items-center justify-between sticky top-0 z-10">
-                <h2 className="font-semibold">Category</h2>
-                <button
-                    className="p-2 bg-[#0C831F] text-white font-bold rounded-md hover:bg-[#2c4e33] transition"
+        <section className="admin-managed-page admin-category-page">
+            <header className="admin-management-heading">
+                <div><p>Catalog</p><h2>Categories</h2><span>Organize products into customer-facing departments.</span></div>
+                <div className="admin-heading-actions">
+                    <Link to="/dashboard/sub-category" className="admin-secondary-action"><Tags size={16} /> Subcategories</Link>
+                    <button
+                    className="admin-primary-action"
+                    type="button"
                     onClick={() => setOpenUploadCategoryModel(true)}
-                >
-                    Add Category
-                </button>
-            </div>
+                    ><Plus size={17} /> Add category</button>
+                </div>
+            </header>
+            <label className="admin-search-field">
+                <Search size={17} aria-hidden="true" />
+                <span className="sr-only">Search categories</span>
+                <input type="search" placeholder="Search categories..." value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
+            </label>
             {
-                !categoryData.length && !loading && (
-                    <NoData message="No Categories Found" subMessage="Try adding a new category." />
+                !filteredCategories.length && !loading && (
+                    <NoData message={categoryData.length ? "No categories match this search" : "No categories found"} subMessage="Add a category or try another search." />
                 )
             }
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-                {categoryData.map((category) => (
+            <div className="admin-category-grid">
+                {filteredCategories.map((category) => (
                     <div
                         key={category._id}
-                        className="bg-white shadow-lg rounded-lg p-4 flex flex-col items-center text-center transition-transform transform hover:scale-105 relative"
+                        className="admin-category-card bg-white"
                     >
                         {/* Buttons Wrapper */}
-                        <div className="absolute top-2 right-2 flex space-x-2">
+                        <div className="admin-category-actions">
                             {/* Edit Button */}
                             <button
-                                className="px-2 py-1 bg-blue-600 text-white font-medium 
-                                    rounded-md shadow-md hover:bg-blue-700 transition-all duration-300"
+                                className="admin-card-icon-button"
+                                type="button"
+                                aria-label={`Edit ${category.name}`}
+                                title="Edit category"
                                 onClick={() => handleOpenUpdateCategoryModel(category)}
                             >
-                                <FaEdit size={15} />
+                                <FaEdit size={16} />
                             </button>
 
                             {/* Delete Button */}
                             <button
-                                className="px-2 py-1 bg-red-600 text-white font-medium rounded-md shadow-md hover:bg-red-700 transition-all duration-300"
+                                className="admin-card-icon-button is-danger"
+                                type="button"
+                                aria-label={`Delete ${category.name}`}
+                                title="Delete category"
                                 onClick={() => handleOpenConfirmDialog(category._id)}
                             >
-                                <MdDelete size={15} />
+                                <MdDelete size={16} />
                             </button>
                         </div>
 
                         <img
                             src={category.image}
                             alt={category.name}
-                            className="w-40 h-40 object-scale-down rounded-md mt-2"
+                            className="admin-category-image"
                         />
+                        <h3>{category.name}</h3>
                     </div>
                 ))}
             </div>

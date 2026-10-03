@@ -15,6 +15,8 @@ function Header({ setIsLoginOpen, setIsCartMenuOpen }) {
     const [isMobile] = useMobile();
     const location = useLocation();
     const isSearchPage = location.pathname === "/search";
+    const isInternalPage = location.pathname.startsWith("/dashboard") || location.pathname === "/user-menu";
+    const showSiteSearch = !isInternalPage && location.pathname !== "/checkout";
     const navigate = useNavigate()
     const cartItem = useSelector((state) => state.cartItem.cart);
     const user = useSelector((state) => state?.user)
@@ -63,18 +65,18 @@ function Header({ setIsLoginOpen, setIsCartMenuOpen }) {
     }
 
     return (
-        <header className="fixed top-0 left-0 w-full h-28 lg:h-22 lg:min-h-15 bg-white px-2 border-b border-gray-200 z-40">
+        <header className={`fixed top-0 left-0 w-full ${isInternalPage ? "h-16 lg:h-20" : "h-28 lg:h-22 lg:min-h-15"} border-b border-emerald-100 bg-white/95 px-2 shadow-[0_2px_14px_rgba(15,23,42,0.05)] backdrop-blur z-40`}>
             {!(isSearchPage && isMobile) && (
-                <div className="container mx-auto flex gap-1 items-center px-4 justify-between lg:max-w-full">
+                <div className="container mx-auto flex min-h-15 items-center justify-between gap-2 px-3 lg:max-w-[1440px] lg:px-5">
                     {/* Logo */}
-                    <div className="shrink-0 px-1 lg:border-r lg:border-gray-200 lg:px-5">
+                    <div className="shrink-0 px-1 lg:border-r lg:border-emerald-100 lg:px-5">
                         <Link to="/" className="flex items-center">
                             <img src={fullLogo} alt="PurainaMarket" className="block h-auto w-[min(46vw,180px)] max-w-full sm:w-[190px] lg:w-[220px] xl:w-[240px]" />
                         </Link>
                     </div>
 
                     {/* Search Section */}
-                    <div className={`hover:cursor-pointer hidden ${location.pathname === "/checkout" ? "hidden" : "lg:block"}`}>
+                    <div className={`hover:cursor-pointer hidden ${showSiteSearch ? "lg:block" : "hidden"}`}>
                         <SearchBar />
                     </div>
 
@@ -82,7 +84,7 @@ function Header({ setIsLoginOpen, setIsCartMenuOpen }) {
                     <div className={`${location.pathname === "/checkout" ? "hidden" : "flex items-center gap-4 lg:gap-8"}`}>
                         {/* User Icon (for mobile) */}
                         <button
-                            className="lg:hidden"
+                            className="rounded-full p-1 transition hover:bg-emerald-50 lg:hidden"
                             onClick={handleMobileUser}
                         >
                             {user?.avatar && user.avatar !== ""
@@ -104,7 +106,7 @@ function Header({ setIsLoginOpen, setIsCartMenuOpen }) {
                                 ? (
                                     <div className="hidden lg:block relative w-[40%] p-2 select-none">
                                         <div
-                                            className="flex gap-2 items-center cursor-pointer p-2 hover:bg-[#f6f2f2] rounded-md"
+                                            className="flex gap-2 items-center cursor-pointer rounded-xl p-2 hover:bg-emerald-50"
                                             onClick={() => setOpenUserMenu(prev => !prev)}
                                         >
                                             <p className="text-lg">Account</p>
@@ -124,7 +126,7 @@ function Header({ setIsLoginOpen, setIsCartMenuOpen }) {
                                         onClick={() => {
                                             setIsLoginOpen(true);
                                         }}
-                                        className="hidden lg:block text-xl cursor-pointer"
+                                        className="hidden rounded-xl px-3 py-2 text-base font-bold text-[#176b2b] transition hover:bg-emerald-50 lg:block"
                                     >
                                         Login
                                     </button>
@@ -133,14 +135,14 @@ function Header({ setIsLoginOpen, setIsCartMenuOpen }) {
 
                         {/* Cart Button */}
                         <button
-                            className="min-w-[7rem] w-auto justify-around hidden lg:flex items-center bg-[#0C831F] px-2 py-2 gap-1 text-white cursor-pointer rounded-lg"
+                            className={`hidden min-w-[7.5rem] w-auto items-center justify-around gap-2 rounded-xl bg-[#176b2b] px-3 py-2.5 text-white shadow-sm transition hover:bg-[#0c831f] hover:shadow-md lg:flex ${isInternalPage ? "lg:hidden" : ""}`}
                             onClick={() => {
                                 if (user._id) {
                                     setIsCartMenuOpen(true);
                                 }
                             }}
                         >
-                            <div className="hover:animate-bounce">
+                            <div>
                                 <HiOutlineShoppingCart size={30} />
                             </div>
                             {
@@ -168,9 +170,9 @@ function Header({ setIsLoginOpen, setIsCartMenuOpen }) {
             )}
 
             {/* Mobile Search Bar */}
-            <div className={`container mx-auto px-4 lg:hidden ${location.pathname === "/checkout" ? "hidden" : isSearchPage && isMobile ? "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" : ""}`}>
+            {showSiteSearch && <div className={`container mx-auto px-4 lg:hidden ${isSearchPage && isMobile ? "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" : ""}`}>
                 <SearchBar />
-            </div>
+            </div>}
         </header>
     );
 }

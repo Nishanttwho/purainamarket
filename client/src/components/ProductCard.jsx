@@ -11,11 +11,11 @@ function ProductCard({data}) {
     const url = `products-list/${validURLConvertor(data.name)}-${data._id}`;
 
     return (
-        <Link to={url} className='border py-2 lg:p-4 grid gap-1 lg:gap-3 min-w-36 lg:min-w-52 rounded cursor-pointer bg-white border-gray-200 relative'>
+        <Link to={url} className='group relative grid min-w-36 gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_2px_8px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg lg:min-w-52 lg:gap-3 lg:p-4'>
             
             {
                 data.discount > 0 && (
-                    <div className="absolute left-3 w-8 h-8 flex items-center justify-center">
+                    <div className="absolute left-2 top-2 z-10 h-9 w-9 flex items-center justify-center lg:left-3 lg:top-3">
                         <img src={disscountBannerSVG} alt="discount" className="w-full h-full absolute"/>
                         <div className="absolute flex flex-col items-center justify-center text-white text-[10px] font-bold">
                             <span>{data.discount}%</span>
@@ -25,36 +25,36 @@ function ProductCard({data}) {
                 )
             }
 
-            <div className='h-25 rounded'>
+            <div className='h-28 overflow-hidden rounded-xl bg-[#f7faf7] p-2 lg:h-36'>
                 <img 
                     src={data.image[0]} 
                     alt={data.name}
-                    className="w-full h-full object-scale-down scale-120"
+                    className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                 />
             </div>
-            <div className='p-1 rounded w-fit flex bg-[#F8F8F8] items-center justify-center mt-2'>
+            <div className='mt-1 flex w-fit items-center justify-center rounded-md bg-emerald-50 px-1.5 py-1 text-[#397724]'>
                 <CiStopwatch size={12}/> <span className="text-[9px] font-semibold">8 MINS</span>
             </div>
-            <div className='line-clamp-2 font-semibold text-sm'>
+            <div className='line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-slate-800'>
                 {data.name}
             </div>
-            <div className='text-xs text-[#6B6666] flex items-center'>
+            <div className='text-xs font-medium text-slate-500 flex items-center'>
                 {formattedUnit}
             </div>
             {data?.sellingType === "loose" && <div className="text-[11px] font-semibold text-[#0C831F]">₹{data.pricePerKg ?? data.price}/kg</div>}
-            <div className='flex items-center justify-between gap-3'>
+            <div className='mt-1 flex items-center justify-between gap-2'>
                 {
                     data.discount > 0 ? (
                         <div className="flex items-center gap-1">
                             <span className="text-[11px] font-bold line-through text-gray-500">
                                 &#8377;{data.price}
                             </span>
-                            <span className="text-[11px] font-bold text-black">
+                            <span className="text-sm font-extrabold text-slate-900">
                                 &#8377;{(data.price - (data.price * data.discount / 100)).toFixed(2)}
                             </span>
                         </div>
                     ) : (
-                        <span className="text-[11px] font-bold">&#8377;{data.price}</span>
+                        <span className="text-sm font-extrabold text-slate-900">&#8377;{data.price}</span>
                     )
                 }
                 <div className="rounded w-fit">

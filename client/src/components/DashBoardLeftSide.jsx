@@ -10,11 +10,14 @@ import toast from "react-hot-toast";
 import AxiosToastError from "../utils/AxiosToastError";
 import { AiFillProduct } from "react-icons/ai";
 import { TbCategory } from "react-icons/tb";
+import { useLocation } from "react-router-dom";
+import { Truck, Users } from "lucide-react";
 
 function DashBoardLeftSide() {
     const user = useSelector((state) => state.user);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = async () => {
         try {
@@ -31,10 +34,10 @@ function DashBoardLeftSide() {
     };
 
     return (
-        <div className="bg-white top-0">
+        <div className="admin-sidebar-content bg-white top-0">
             {/* Back Button */}
             <button
-                className="flex items-center space-x-2 text-[#666666] text-lg hover:text-black transition duration-200 hover:bg-gray-200 px-2 py-3 w-full border-b border-gray-300"
+                className="admin-sidebar-back flex items-center space-x-2 text-[#666666] text-lg hover:text-black transition duration-200 hover:bg-gray-200 px-2 py-3 w-full border-b border-gray-300"
                 onClick={() => navigate("/")}
             >
                 <IoArrowBack size={24} /> <span>Go Back</span>
@@ -63,11 +66,17 @@ function DashBoardLeftSide() {
                 </div>
             </Link>
             {/* Menu Items */}
-            <div>
+            <div className="admin-sidebar-nav">
                 {
                     user.role === "ADMIN"
                     && (
                         <>
+                            <Link
+                                to="/dashboard"
+                                className={`py-3 flex items-center space-x-4 border-gray-300 border-b px-2 ${location.pathname === "/dashboard" ? "text-black bg-gray-200" : "text-[#666666] hover:text-black transition duration-200 hover:bg-gray-200"}`}
+                            >
+                                <FaHome size={20} /> <span>Dashboard</span>
+                            </Link>
                             <Link
                                 to="/dashboard/category"
                                 className={`py-3 flex items-center space-x-4  border-gray-300 border-b px-2 ${location.pathname === "/dashboard/category" ? "text-black bg-gray-200" : "text-[#666666] hover:text-black transition duration-200 hover:bg-gray-200"}`}
@@ -98,15 +107,35 @@ function DashBoardLeftSide() {
                             >
                                 <FaBox size={18} /> <span>All Orders</span>
                             </Link>
+                            <Link
+                                to="/dashboard/riders"
+                                className={`py-3 flex items-center space-x-4 border-gray-300 border-b px-2 ${location.pathname === "/dashboard/riders" ? "text-black bg-gray-200" : "text-[#666666] hover:text-black transition duration-200 hover:bg-gray-200"}`}
+                            >
+                                <FaUserCircle size={18} /> <span>Riders</span>
+                            </Link>
+                            <Link to="/dashboard/users" className={`py-3 flex items-center space-x-4 border-gray-300 border-b px-2 ${location.pathname === "/dashboard/users" ? "text-black bg-gray-200" : "text-[#666666] hover:text-black transition duration-200 hover:bg-gray-200"}`}><Users size={18} /> <span>Users</span></Link>
+                            <Link
+                                to="/dashboard/coupons"
+                                className={`py-3 flex items-center space-x-4 border-gray-300 border-b px-2 ${location.pathname === "/dashboard/coupons" ? "text-black bg-gray-200" : "text-[#666666] hover:text-black transition duration-200 hover:bg-gray-200"}`}
+                            >
+                                <span className="text-lg font-bold leading-none">%</span> <span>Coupons</span>
+                            </Link>
+                            <Link to="/dashboard/admin-referrals" className={`py-3 flex items-center space-x-4 border-gray-300 border-b px-2 ${location.pathname === "/dashboard/admin-referrals" ? "text-black bg-gray-200" : "text-[#666666] hover:text-black transition duration-200 hover:bg-gray-200"}`}><span className="text-lg font-bold">↗</span><span>Referrals</span></Link>
+                            <Link to="/dashboard/delivery-areas" className={`py-3 flex items-center space-x-4 border-gray-300 border-b px-2 ${location.pathname === "/dashboard/delivery-areas" ? "text-black bg-gray-200" : "text-[#666666] hover:text-black transition duration-200 hover:bg-gray-200"}`}><Truck size={18} /><span>Delivery areas</span></Link>
+                            <Link to="/dashboard/store-settings" className={`py-3 flex items-center space-x-4 border-gray-300 border-b px-2 ${location.pathname === "/dashboard/store-settings" ? "text-black bg-gray-200" : "text-[#666666] hover:text-black transition duration-200 hover:bg-gray-200"}`}><span className="text-lg font-bold">◷</span><span>Store settings</span></Link>
                         </>
                     )
                 }
-                <Link
+                {user.role === "USER" && <Link
                     to="/dashboard/my-orders"
                     className={`py-3 flex items-center space-x-4  border-gray-300 border-b px-2 ${location.pathname === "/dashboard/my-orders" ? "text-black bg-gray-200" : "text-[#666666] hover:text-black transition duration-200 hover:bg-gray-200"}`}
                 >
                     <MdOutlineListAlt size={20} /> <span>My Orders</span>
-                </Link>
+                </Link>}
+                {user.role === "USER" && <>
+                    <Link to="/dashboard/referrals" className={`py-3 flex items-center space-x-4 border-gray-300 border-b px-2 ${location.pathname === "/dashboard/referrals" ? "text-black bg-gray-200" : "text-[#666666] hover:text-black transition duration-200 hover:bg-gray-200"}`}>Referrals</Link>
+                    <Link to="/dashboard/my-coupons" className={`py-3 flex items-center space-x-4 border-gray-300 border-b px-2 ${location.pathname === "/dashboard/my-coupons" ? "text-black bg-gray-200" : "text-[#666666] hover:text-black transition duration-200 hover:bg-gray-200"}`}>My Coupons</Link>
+                </>}
                 <Link
                     to="/dashboard/addresses"
                     className={`py-3 flex items-center space-x-4  border-gray-300 border-b px-2 ${location.pathname === "/dashboard/addresses" ? "text-black bg-gray-200" : "text-[#666666] hover:text-black transition duration-200 hover:bg-gray-200"}`}

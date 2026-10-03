@@ -72,13 +72,13 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
     
 
     return (
-        <section className="fixed top-0 bottom-0 left-0 right-0 bg-neutral-800/70 z-40">
-            <div className="fixed top-0 right-0 h-full pb-10 bg-[#F5F7FD] xs:w-screen sm:w-screen lg:w-100 shadow-lg overflow-y-auto">
+        <section className="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-[2px]">
+            <div className="fixed right-0 top-0 h-full w-full overflow-y-auto bg-[#f5f8f4] pb-10 shadow-2xl sm:w-[430px]">
                 {/* Sticky Cart Header */}
-                <div className="sticky top-0 bg-white flex justify-between z-50">
-                    <h2 className="text-md font-bold mb-1 p-4">My Cart</h2>
+                <div className="sticky top-0 z-50 flex justify-between border-b border-emerald-100 bg-white/95 backdrop-blur">
+                    <h2 className="mb-1 p-4 text-lg font-extrabold text-slate-900">My Cart</h2>
                     <button
-                        className="absolute top-4 right-4 text-xl font-bold"
+                        className="absolute right-4 top-3 rounded-full p-2 text-xl font-bold text-slate-600 transition hover:bg-emerald-50"
                         onClick={() => {
                             setIsCartMenuOpen(false)
                             setIsAddressMenuOpen(false)
@@ -104,16 +104,16 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
                     <>
                         {
                             Object.keys(cartItem).length !== 0 ? (
-                                <div className="bg-[#F5F7FD] h-full w-full p-4">
+                                <div className="h-full w-full bg-[#f5f8f4] p-4">
 
                                     {/* Total Savings */}
-                                    <div className="bg-[#DBE8FF] p-3 text-sm text-blue-500 flex items-center justify-between rounded-2xl">
+                                    <div className="flex items-center justify-between rounded-2xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-[#176b2b]">
                                         <span className="font-semibold">Your total savings</span>
                                         <span className="font-bold">&#8377;{totalSavings}</span>
                                     </div>
 
                                     {/* Clock & Products */}
-                                    <div className="w-full bg-white mt-2 rounded-xl">
+                                    <div className="mt-3 w-full rounded-2xl border border-slate-100 bg-white shadow-sm">
                                         {/* Clock */}
                                         <div className="p-3 flex gap-2 items-center">
                                             <img src={clock} alt="" className="w-12 h-12 bg-[#F8F8F8] object-cover rounded-xl" />
@@ -162,7 +162,7 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
                                     </div>
 
                                     {/* Bill Details */}
-                                    <div className="w-full bg-white mt-3 rounded-xl ">
+                                    <div className="mt-3 w-full rounded-2xl border border-slate-100 bg-white py-2 shadow-sm">
                                         <div className="flex flex-col gap-1 px-3">
                                             <span className="font-bold text-md">Bill details</span>
                                             <div className="flex justify-between items-center">
@@ -225,7 +225,7 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
                                     </div>
 
                                     {/* Feeding India donation */}
-                                    <div className="w-full bg-white mt-3 rounded-xl flex justify-between items-center p-4">
+                                    <div className="mt-3 flex w-full items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
                                         <div className="flex gap-2 items-center">
                                             <img src={feeding_india_icon_v6} alt="" className="w-13 h-10" />
                                             <div className="flex flex-col">
@@ -245,7 +245,7 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
                                     </div>
 
                                     {/* Tip */}
-                                    <div className="w-full bg-white mt-3 rounded-xl p-2">
+                                    <div className="mt-3 w-full rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
                                         <div className="flex">
                                             <div>
                                                 <p className="text-md font-bold">Tip your delivery partner</p>
@@ -357,7 +357,7 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
                                     </div>
 
                                     {/* Cancellation Policy */}
-                                    <div className="w-full bg-white mt-5 rounded-xl">
+                                    <div className="mt-5 w-full rounded-2xl border border-slate-100 bg-white shadow-sm">
                                         <div className="flex flex-col px-3 py-2">
                                             <p className="text-md font-bold">Cancellation Policy</p>
                                             <p className="text-xs text-gray-500 mt-2">Orders cannot be cancelled once packed for delivery. In case of unexpected delays, a refund will be provided, if applicable.</p>

@@ -15,13 +15,13 @@ function DisplayTable({ data, columns }) {
     });
 
     return (
-        <div className="p-4 overflow-x-auto">
+        <div className="admin-data-table p-4 overflow-x-auto">
             <table className="w-full border border-gray-300 rounded-lg shadow-md">
                 {/* Table Head */}
                 <thead className="bg-gray-900 text-white text-center sticky top-0">
                     {table.getHeaderGroups()?.map((headerGroup) => (
                         <tr key={headerGroup.id}>
-                            <th className="px-4 py-2 text-sm font-semibold border-b border-gray-500 border-r">#</th>
+                            <th scope="col" className="px-4 py-2 text-sm font-semibold border-b border-gray-500 border-r">#</th>
                             {headerGroup.headers.map((header) => (
                                 <th 
                                     key={header.id} 
@@ -43,10 +43,11 @@ function DisplayTable({ data, columns }) {
                             key={row.id} 
                             className={`${rowIndex % 2 === 0 ? "bg-gray-100" : "bg-gray-200"} hover:bg-gray-300 transition-all`}
                         >
-                            <td className="px-6 py-3 text-center border-b border-r border-gray-400">{rowIndex + 1}</td>
+                                    <td data-label="#" className="px-6 py-3 text-center border-b border-r border-gray-400">{rowIndex + 1}</td>
                             {row.getVisibleCells().map((cell) => (
-                                <td 
+                                    <td
                                     key={cell.id} 
+                                        data-label={typeof cell.column.columnDef.header === "string" ? cell.column.columnDef.header : cell.column.id}
                                     className="px-6 py-3 border-b border-r border-gray-400 last:border-r-0 text-center"
                                 >
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -13,6 +13,11 @@ import productRouters from "./routes/product.route.js"
 import cartRoutes from "./routes/cart.route.js"
 import addressRoutes from "./routes/address.route.js"
 import orderRouters from "./routes/order.route.js"
+import couponRoutes from "./routes/coupon.route.js"
+import storeRoutes from "./routes/store.route.js"
+import referralRoutes from "./routes/referral.route.js"
+import deliveryAreaRoutes from "./routes/deliveryArea.route.js"
+import OrderModel from "./models/order.model.js"
 
 dotenv.config()
 
@@ -64,8 +69,18 @@ app.use("/api/product", productRouters)
 app.use("/api/cart", cartRoutes)
 app.use("/api/address", addressRoutes)
 app.use("/api/order", orderRouters)
+app.use("/api/coupon", couponRoutes)
+app.use("/api/store", storeRoutes)
+app.use("/api/referral", referralRoutes)
+app.use("/api/delivery-areas", deliveryAreaRoutes)
 
-connectDB().then(() => {
+connectDB().then(async () => {
+    try {
+        await OrderModel.collection.dropIndex("riderId_1");
+        console.log("Removed legacy one-active-order-per-rider index.");
+    } catch (error) {
+        if (![26, 27].includes(error?.code)) throw error;
+    }
     app.listen(PORT, () => {
         console.log(`Server is running on ${PORT}`);
     })

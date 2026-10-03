@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useMatches } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -15,12 +15,20 @@ import AxiosToastError from "./utils/AxiosToastError";
 import { handleAddItem } from "./store/cartProductSlice";
 import CartButtonForMobile from "./components/CartButtonForMobile"
 import CartSideMenu from "./components/CartSideMenu";
-import AddNewAddress from "./components/AddNewAddress";
 import AddressMenu from "./components/AddressMenu";
 import { setAddresses } from "./store/addressSlice";
-import EditAddress from "./components/EditAddress";
 import AddNewAddressManually from "./components/AddNewAddressManually";
 import EditAddressManually from "./components/EditAddressManually";
+import StoreStatusBanner from "./components/StoreStatusBanner";
+import { StoreAvailabilityProvider } from "./provider/StoreAvailabilityContext";
+import { persistReferralCodeFromSearch } from "./utils/referralAttribution";
+
+if (typeof window !== "undefined") {
+  persistReferralCodeFromSearch(window.location.search, {
+    storage: window.sessionStorage,
+    hasExistingSession: Boolean(window.localStorage.getItem("accessToken"))
+  });
+}
 
 function App() {
 
@@ -35,6 +43,11 @@ function App() {
   const dispatch = useDispatch()
   const user = useSelector((state) => state.user);
   const location = useLocation();
+  const matches = useMatches();
+  const isRiderArea = location.pathname.startsWith("/rider");
+  const hasAdminRoute = matches.some((match) => match.handle?.adminPanel === true);
+  const isAdminArea = hasAdminRoute && (user.role === "ADMIN" || matches.some((match) => match.handle?.adminOnly === true));
+  const showStorefrontFooter = matches.some((match) => match.handle?.showStorefrontFooter === true);
 
   const fetchUser = async () => {
     try {
@@ -51,11 +64,12 @@ function App() {
           location.pathname === "/edit-address" ||
           location.pathname === "/cart" ||
           location.pathname === "/checkout" || 
+          isAdminArea ||
           openAddNewAddressMenu || 
           openEditAddressMenu;
   
       setIsCartButtonForMobile(!shouldHideCartButton);
-  }, [location.pathname, openAddNewAddressMenu, openEditAddressMenu]);
+  }, [location.pathname, isAdminArea, openAddNewAddressMenu, openEditAddressMenu]);
   // console.warn = () => {};
   // console.error = () => {};
 
@@ -127,42 +141,42 @@ function App() {
   }
 
   useEffect(() => {
-    fetchCartItem()
     fetchUser()
-    fetchCategory()
-    fetchSubCategory()
-    fetchAddress()
+    if (!location.pathname.startsWith("/rider")) {
+      fetchCartItem()
+      fetchCategory()
+      fetchSubCategory()
+      fetchAddress()
+    }
   }, [])
 
   useEffect(() => {
-    if (user._id) { // Fetch cart only if the user is logged in
+    if (user._id && !isRiderArea) { // Fetch cart only if the user is logged in
       fetchCartItem();
     }
-  }, [user]);
+  }, [user, isRiderArea]);
 
   
   return (
     <>
-      <Header
+      {!isRiderArea && !isAdminArea && <Header
         setIsLoginOpen={setIsLoginOpen}
         setIsCartMenuOpen={setIsCartMenuOpen}
-      />
+      />}
 
-      <main className="min-h-[77vh] w-full bg-white">
-        <Outlet
-          fetchAddress={fetchAddress}
-          context={{ setIsLoginOpen, isUserReady }}
-        />
-      </main>
+      <StoreAvailabilityProvider>
+        <main className={isAdminArea || isRiderArea ? "dashboard-route-main" : `min-h-[77vh] w-full bg-white ${["/", "/cart", "/checkout"].includes(location.pathname) ? "pt-8 lg:pt-2" : ""}`}>
+          <StoreStatusBanner hidden={isAdminArea || isRiderArea} />
+          <Outlet fetchAddress={fetchAddress} context={{ setIsLoginOpen, isUserReady }} />
+        </main>
+      </StoreAvailabilityProvider>
 
-      {
-        location.pathname !== "/checkout" && <Footer />
-      }
+      {showStorefrontFooter && <Footer />}
       <Toaster />
 
       {/* Cart option for mobile if there is something in cart */}
       {
-        isCartButtonForMobile && (
+        isCartButtonForMobile && !isRiderArea && !isAdminArea && (
           <CartButtonForMobile 
             setIsCartButtonForMobile={setIsCartButtonForMobile}
             setIsCartMenuOpen={setIsCartMenuOpen}

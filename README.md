@@ -77,6 +77,7 @@ STRIPE_SECRET_KEY = "your-stripe-secret-key"
 STRIPE_WEBHOOK_SECRET_KEY = "your-stripe-webhook-secret"
 RAZORPAY_SECRET_KEY = "your-razorpay-secret-key"
 RAZORPAY_ID_KEY = "your-razorpay-id-key"
+GOOGLE_CLIENT_ID = "your-google-web-client-id"
 PORT = 8080
 ```
 Run the server:
@@ -95,11 +96,15 @@ VITE_API_URL = "http://localhost:8080"
 VITE_GOOGLE_API_KEY = "your-google-api-key"
 VITE_STRIPE_PUBLISHABLE_KEY = "your-stripe-publishable-key"
 VITE_RAZORPAY_ID_KEY = "your-razorpay-id-key"
+VITE_GOOGLE_CLIENT_ID = "your-google-web-client-id"
 ```
 Run the client:
 ```sh
 npm run dev
 ```
+
+### Google Sign-In
+Create a Google OAuth client with application type **Web application** in Google Cloud Console. Add both `http://localhost:5173` and `http://127.0.0.1:5173` under **Authorized JavaScript origins** for local development, then use that client ID for both `GOOGLE_CLIENT_ID` in `server/.env` and `VITE_GOOGLE_CLIENT_ID` in `client/.env`. The popup ID-token flow uses no redirect callback or client secret. Add the production website origin when deploying, and do not commit `.env` files.
 
 ## Usage
 1. Open the client at `http://localhost:5173`

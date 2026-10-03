@@ -4,14 +4,18 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Mail, Phone, ShoppingBasket, X } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
+import { GoogleLogin } from "@react-oauth/google";
 import fullLogo from "../assets/plogo.png";
 import summaryApi from "../common/summaryApi";
 import { setUserDetails } from "../store/userSlice";
 import Axios from "../utils/Axios";
 import fetchUserDetails from "../utils/fetchUserDetails";
 import "./Login.css";
+import { clearPendingReferralCode, getPendingReferralCode } from "../utils/referralAttribution";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const normalizeIdentifier = (value) => {
     const trimmed = value.trim();
@@ -68,6 +72,7 @@ const Login = ({ setIsLoginOpen }) => {
         password: "",
         confirmPassword: ""
     });
+    const [referralCode] = useState(() => getPendingReferralCode());
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -155,9 +160,44 @@ const Login = ({ setIsLoginOpen }) => {
             const userDetails = await fetchUserDetails();
             if (userDetails?.data) dispatch(setUserDetails(userDetails.data));
             close();
-            navigate("/");
+            clearPendingReferralCode();
+            const role = response.data.data.role || userDetails?.data?.role;
+            navigate(role === "RIDER" ? "/rider" : role === "ADMIN" ? "/dashboard" : "/");
         } catch (requestError) {
             setError(requestError.response?.data?.message || "That password did not match this account.");
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const handleGoogleLogin = async ({ credential } = {}) => {
+        setError("");
+        if (!credential) {
+            setError("Google sign-in did not return a credential. Please try again.");
+            return;
+        }
+
+        setBusy(true);
+        try {
+            const response = await Axios({
+                ...summaryApi.googleLogin,
+                data: { credential, referralCode }
+            });
+            if (!response.data.success) {
+                setError(response.data.message || "We could not sign you in with Google.");
+                return;
+            }
+
+            localStorage.setItem("accessToken", response.data.data.accessToken);
+            localStorage.setItem("refreshToken", response.data.data.refreshToken);
+            const userDetails = await fetchUserDetails();
+            if (userDetails?.data) dispatch(setUserDetails(userDetails.data));
+            close();
+            clearPendingReferralCode();
+            const role = response.data.data.role || userDetails?.data?.role;
+            navigate(role === "RIDER" ? "/rider" : role === "ADMIN" ? "/dashboard" : "/");
+        } catch (requestError) {
+            setError(requestError.response?.data?.message || "Google sign-in failed. Please try again.");
         } finally {
             setBusy(false);
         }
@@ -188,7 +228,8 @@ const Login = ({ setIsLoginOpen }) => {
                     name: registration.name.trim(),
                     email: registration.email.trim().toLowerCase(),
                     mobile: normalizeIdentifier(registration.mobile),
-                    password: registration.password
+                    password: registration.password,
+                    referralCode
                 }
             });
 
@@ -202,6 +243,7 @@ const Login = ({ setIsLoginOpen }) => {
             const userDetails = await fetchUserDetails();
             if (userDetails?.data) dispatch(setUserDetails(userDetails.data));
             close();
+            clearPendingReferralCode();
             navigate("/");
         } catch (requestError) {
             setError(requestError.response?.data?.message || "We could not create your account. Please try again.");
@@ -319,6 +361,26 @@ const Login = ({ setIsLoginOpen }) => {
                                             Continue <ArrowRight size={18} />
                                         </motion.button>
                                     </form>
+                                    <div className="auth-google-section">
+                                        <div className="auth-divider"><span>or</span></div>
+                                        <div className="auth-google-control">
+                                            {googleClientId ? (
+                                                <GoogleLogin
+                                                    onSuccess={handleGoogleLogin}
+                                                    onError={() => setError("Google sign-in failed. Please try again.")}
+                                                    text="continue_with"
+                                                    theme="outline"
+                                                    shape="rectangular"
+                                                    size="large"
+                                                    width={Math.max(200, Math.min(370, window.innerWidth - 48))}
+                                                />
+                                            ) : (
+                                                <button className="auth-google-fallback" type="button" onClick={() => setError("Google sign-in is not configured yet.")}>
+                                                    <FcGoogle size={20} /> Continue with Google
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
                                 </motion.div>
                             ) : null}
 
@@ -361,6 +423,7 @@ const Login = ({ setIsLoginOpen }) => {
                                     <span className="auth-step-label">NEW TO PURAINAMARKET?</span>
                                     <h1>Let’s get you started.</h1>
                                     <p className="auth-subtitle">A few details and your basket is ready.</p>
+                                    {referralCode && <p className="auth-identity">Referral code {referralCode} will be applied to your signup.</p>}
                                     <form className="auth-form auth-register-form" onSubmit={handleRegister}>
                                         <label className="auth-field">
                                             <span className="auth-label">Full name</span>

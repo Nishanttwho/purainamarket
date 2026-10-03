@@ -1,0 +1,10 @@
+import { Router } from "express";
+import authMiddleware from "../middleware/authMiddleware.js";
+import requireRole from "../middleware/requireRole.js";
+import { createDeliveryArea, listActiveDeliveryAreas, listDeliveryAreas, saveDeliveryArea } from "../controllers/deliveryArea.controller.js";
+const routes = Router();
+routes.get("/active", authMiddleware, requireRole("USER"), listActiveDeliveryAreas);
+routes.get("/", authMiddleware, requireRole("ADMIN"), listDeliveryAreas);
+routes.post("/", authMiddleware, requireRole("ADMIN"), createDeliveryArea);
+routes.put("/:id", authMiddleware, requireRole("ADMIN"), saveDeliveryArea);
+export default routes;

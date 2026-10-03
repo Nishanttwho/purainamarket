@@ -3,22 +3,24 @@ import { useState } from "react";
 import { useAddress } from "../provider/AddressContext";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FaAngleDown, FaAngleUp } from "react-icons/fa";
+import { Banknote, CheckCircle2, CreditCard } from "lucide-react";
 import toast from "react-hot-toast"
 import Axios from "../utils/Axios";
 import summaryApi from "../common/summaryApi";
 import { userCart } from "../provider/CartContext";
-import { loadStripe } from "@stripe/stripe-js";
+import { useStoreAvailability } from "../provider/StoreAvailabilityContext";
 
 function CheckOut() {
 
     const user = useSelector(state => state.user);
     const { addresses } = useAddress()
     const { clearTheCart } = userCart()
+    const { availability } = useStoreAvailability();
+    const canPlaceOrder = availability?.isOpen === true;
     const navigate = useNavigate();
     const location = useLocation();
 
-    const { grandTotal, totalItems, totalPriceWithOutDiscount, otherCharge } = location.state || {};
+    const { grandTotal, totalItems, totalPriceWithOutDiscount, otherCharge, couponCode = "" } = location.state || {};
     // console.log("otherCharge: ", otherCharge);
 
     const cartItem = useSelector((state) => state.cartItem.cart);
@@ -41,6 +43,7 @@ function CheckOut() {
                     totalAmt: grandTotal,
                     otherCharge: otherCharge,
                     subTotalAmt: totalPriceWithOutDiscount,
+                    couponCode,
                     delivery_address_id: defaultAddress._id,
                 }
             })
@@ -62,33 +65,6 @@ function CheckOut() {
         }
     }
 
-    const handleStripePayment = async () => {
-        try {
-            const toastId = toast.loading("Redirecting to payment gateway... Please wait");
-
-            const stripePromise = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-
-            const response = await Axios({
-                ...summaryApi.addStripPaymentOrder,
-                data: {
-                    itemList: cartItem,
-                    totalAmt: grandTotal,
-                    otherCharge: otherCharge,
-                    subTotalAmt: totalPriceWithOutDiscount,
-                    delivery_address_id: defaultAddress._id,
-                }
-            });
-
-            // Dismiss the loading toast before redirecting
-            toast.dismiss(toastId);
-
-            stripePromise.redirectToCheckout({ sessionId: response.data.id });
-        } catch (error) {
-            toast.dismiss();
-            toast.error(error.message || error);
-        }
-    };
-
     const handleRazorpayPayment = async () => {
         try {
             const response = await Axios({
@@ -98,6 +74,7 @@ function CheckOut() {
                     totalAmt: grandTotal,
                     otherCharge: otherCharge,
                     subTotalAmt: totalPriceWithOutDiscount,
+                    couponCode,
                     delivery_address_id: defaultAddress._id,
                 }
             });
@@ -152,12 +129,15 @@ function CheckOut() {
     };
 
     const handlePayNow = async () => {
+        if (!canPlaceOrder) {
+            toast.error(availability?.message || "Ordering is currently unavailable.");
+            setIsConfirmationScreenActive(false);
+            return;
+        }
         try {
             setLoading(true)
             if (selectedPaymentMethod === "cash") {
                 handleCashOnDeliveryOrder()
-            } else if (selectedPaymentMethod === "stripe") {
-                handleStripePayment()
             } else if (selectedPaymentMethod === "razorpay") {
                 handleRazorpayPayment()
             }    
@@ -175,73 +155,38 @@ function CheckOut() {
 
     return (
         <>
-            <div className="flex justify-between min-h-[90vh] w-screen lg:w-full xl:w-full lg:max-w-[1100px] xl:max-w-[1100px] mx-auto select-none  py-8 lg:p-8 xl:p-8 ">
+            <div className="flex flex-col gap-5 min-h-[90vh] w-screen lg:flex-row lg:w-full xl:w-full lg:max-w-[1100px] xl:max-w-[1100px] mx-auto select-none py-5 pb-24 lg:p-8">
                 {/* Left Section - Payment Methods */}
-                <div className="w-screen lg:w-2/3 xl:w-2/3 p-6 rounded-lg bg-white">
-                    <h2 className="text-lg lg:text-2xl xl:text-2xl font-semibold mb-4">Select Payment Method</h2>
-                    <div>
+                <div className="w-full lg:w-2/3 xl:w-2/3 p-4 sm:p-6 rounded-2xl bg-white">
+                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-emerald-700">Secure checkout</p>
+                    <h2 className="text-xl lg:text-2xl font-bold mb-5 text-slate-900">Choose how to pay</h2>
+                    <div className="grid gap-3">
                         {/* COD Method */}
-                        <div className="py-5 px-6 rounded-t-lg overflow-y-auto border border-gray-200">
-                            <div className="flex justify-between cursor-pointer"
-                                onClick={() => {
+                        <button type="button" aria-expanded={optionOpen === "cash"} className={`w-full rounded-2xl border p-4 text-left transition ${selectedPaymentMethod === "cash" ? "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-100" : "border-slate-200 hover:border-emerald-300"}`} onClick={() => {
+                                    if (!canPlaceOrder) return toast.error(availability?.message || "Ordering is currently unavailable.");
                                     setOptionOpen(optionOpen === "cash" ? "" : "cash");
                                     setSelectedPaymentMethod(optionOpen === "cash" ? "" : "cash");
-                                }}
-                            >
-                                <p className="text-2xl text-[#1C1C1C]">Cash</p>
-                                <button>
-                                    {optionOpen === "cash" ? <FaAngleUp size={20} /> : <FaAngleDown size={20} />}
-                                </button>
+                                }}>
+                            <div className="flex items-center gap-3">
+                                <span className="grid h-11 w-11 place-items-center rounded-xl bg-amber-100 text-amber-800"><Banknote size={22}/></span>
+                                <span className="min-w-0 flex-1"><span className="block text-base font-bold text-slate-900">Cash on Delivery</span><span className="mt-1 block text-sm font-normal text-slate-500">Pay the rider when your order arrives</span></span>
+                                {selectedPaymentMethod === "cash" ? <CheckCircle2 className="text-emerald-700"/> : <span className="h-5 w-5 rounded-full border-2 border-slate-300"/>}
                             </div>
-                            {/* Open COD section */}
-                            {optionOpen === "cash" && (
-                                <div className="mt-10 font-semibold text-gray-600">
-                                    Please keep exact change handy to help us serve you better.
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Stripe Method */}
-                        <div className="py-5 px-6 overflow-y-auto border border-gray-200">
-                            <div className="flex justify-between cursor-pointer"
-                                onClick={() => {
-                                    setOptionOpen(optionOpen === "stripe" ? "" : "stripe");
-                                    setSelectedPaymentMethod(optionOpen === "stripe" ? "" : "stripe");
-                                }}
-                            >
-                                <p className="text-2xl text-[#1C1C1C]">Stripe</p>
-                                <button>
-                                    {optionOpen === "stripe" ? <FaAngleUp size={20} /> : <FaAngleDown size={20} />}
-                                </button>
-                            </div>
-                            {/* Open Stripe section */}
-                            {optionOpen === "stripe" && (
-                                <div className="mt-10 font-semibold text-gray-600">
-                                    Secure and fast payment processing powered by Stripe.
-                                </div>
-                            )}
-                        </div>
-
+                            {optionOpen === "cash" && <p className="mt-3 border-t border-emerald-100 pt-3 text-sm font-medium text-slate-600">Please keep exact change handy to help us serve you better.</p>}
+                        </button>
                         {/* Razorpay Method */}
-                        <div className="py-5 px-6 overflow-y-auto border border-gray-200">
-                            <div className="flex justify-between cursor-pointer"
-                                onClick={() => {
+                        <button type="button" aria-expanded={optionOpen === "razorpay"} className={`w-full rounded-2xl border p-4 text-left transition ${selectedPaymentMethod === "razorpay" ? "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-100" : "border-slate-200 hover:border-emerald-300"}`} onClick={() => {
+                                    if (!canPlaceOrder) return toast.error(availability?.message || "Ordering is currently unavailable.");
                                     setOptionOpen(optionOpen === "razorpay" ? "" : "razorpay");
                                     setSelectedPaymentMethod(optionOpen === "razorpay" ? "" : "razorpay");
-                                }}
-                            >
-                                <p className="text-2xl text-[#1C1C1C]">Razorpay</p>
-                                <button>
-                                    {optionOpen === "razorpay" ? <FaAngleUp size={20} /> : <FaAngleDown size={20} />}
-                                </button>
+                                }}>
+                            <div className="flex items-center gap-3">
+                                <span className="grid h-11 w-11 place-items-center rounded-xl bg-blue-100 text-blue-800"><CreditCard size={22}/></span>
+                                <span className="min-w-0 flex-1"><span className="block text-base font-bold text-slate-900">Pay online</span><span className="mt-1 block text-sm font-normal text-slate-500">Cards, UPI, netbanking and more</span></span>
+                                {selectedPaymentMethod === "razorpay" ? <CheckCircle2 className="text-emerald-700"/> : <span className="h-5 w-5 rounded-full border-2 border-slate-300"/>}
                             </div>
-                            {/* Open Razorpay section */}
-                            {optionOpen === "razorpay" && (
-                                <div className="mt-10 font-semibold text-gray-600">
-                                    Pay instantly with Razorpay&#39;s seamless checkout experience.
-                                </div>
-                            )}
-                        </div>
+                            {optionOpen === "razorpay" && <p className="mt-3 border-t border-emerald-100 pt-3 text-sm font-medium text-slate-600">Continue securely with Razorpay.</p>}
+                        </button>
                     </div>
 
                 </div>
@@ -294,11 +239,11 @@ function CheckOut() {
                         }
                     </div>
                     <button
-                        className={`w-full text-white py-3 text-lg font-bold rounded-lg ${selectedPaymentMethod === ""
+                        className={`w-full text-white py-3 text-lg font-bold rounded-lg ${selectedPaymentMethod === "" || !canPlaceOrder
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-[#4A842C] cursor-pointer"
                             }`}
-                        disabled={selectedPaymentMethod === ""}
+                        disabled={selectedPaymentMethod === "" || !canPlaceOrder}
                         onClick={() => setIsConfirmationScreenActive(true)}
                     >
                         Pay Now
@@ -306,11 +251,11 @@ function CheckOut() {
                 </div>
             </div>
             <button
-                className={`w-full fixed lg:hidden xl:hidden bottom-0 text-white py-3 text-lg font-bold ${selectedPaymentMethod === ""
+                className={`w-full fixed lg:hidden xl:hidden bottom-0 text-white py-3 text-lg font-bold ${selectedPaymentMethod === "" || !canPlaceOrder
                     ? "bg-[#CCCCCC] cursor-not-allowed"
                     : "bg-[#4A842C] cursor-pointer"
                     }`}
-                disabled={selectedPaymentMethod === ""}
+                disabled={selectedPaymentMethod === "" || !canPlaceOrder}
                 onClick={() => setIsConfirmationScreenActive(true)}
             >
                 Pay Now

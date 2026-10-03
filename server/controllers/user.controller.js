@@ -11,6 +11,10 @@ import forgotPasswordEmailTemplate from "../utils/forgotPasswordEmailTemplate.js
 import resetPasswordConfirmationTemplate from "../utils/resetPasswordConfirmationTemplate.js";
 import jwt from "jsonwebtoken"
 import deleteImgCloudinary from "../utils/deleteImgCloudinary.js";
+import { randomBytes } from "crypto";
+import googleAuthClient from "../config/googleAuth.js";
+import ReferralModel from "../models/referral.model.js";
+import { findReferralInviter, ReferralAttributionError, recordReferralAttribution } from "../utils/referralAttribution.js";
 
 dotenv.config();
 
@@ -35,9 +39,10 @@ const getUserQueryFromIdentifier = (identifier) => {
 };
 
 //register user
-export const registerUserController = async (req, res) => {
+export const createRegisterUserController = (sendEmailImpl = sendEmail) => async (req, res) => {
     try {
         const { name, email, password, mobile } = req.body;
+        const referralCode = typeof req.body?.referralCode === "string" ? req.body.referralCode.trim().toUpperCase() : "";
 
         if (!name || !email || !password || !mobile) {
             return res.status(400).json({
@@ -61,6 +66,9 @@ export const registerUserController = async (req, res) => {
 
         const hashedPassword = await hashPassword(password);
 
+        let inviter;
+        try { inviter = await findReferralInviter(referralCode); }
+        catch (error) { if (error instanceof ReferralAttributionError) return res.status(error.status).json({ message: error.message, error: true, success: false }); throw error; }
         const newUser = new UserModel({
             name,
             email,
@@ -70,9 +78,11 @@ export const registerUserController = async (req, res) => {
 
         const savedUser = await newUser.save();
 
+        await recordReferralAttribution({ inviter, referredUserId: savedUser._id, referralCode });
+
         const verifyEmailURL = `${process.env.CLIENT_URL}/verify-email?code=${savedUser._id}`;
 
-        await sendEmail({
+        await sendEmailImpl({
             sendTo: email,
             subject: "Verification Email from PurainaMarket",
             html: verificationEmailTemplate({
@@ -107,6 +117,7 @@ export const registerUserController = async (req, res) => {
 
     } catch (error) {
         // console.error("Error in registerUserController:", error);
+        if (error instanceof ReferralAttributionError) return res.status(error.status).json({ message: error.message, error: true, success: false });
         return res.status(500).json({
             message: "Internal server error.",
             error: true,
@@ -114,6 +125,8 @@ export const registerUserController = async (req, res) => {
         });
     }
 };
+
+export const registerUserController = createRegisterUserController();
 
 //verify user
 export const verifyUserController = async (req, res) => {
@@ -240,7 +253,8 @@ export const loginUserController = async (req, res) => {
             success: true,
             data: {
                 accessToken,
-                refreshToken
+                refreshToken,
+                role: user.role
             }
         })
 
@@ -252,6 +266,102 @@ export const loginUserController = async (req, res) => {
         })
     }
 }
+
+export const googleLoginController = async (req, res) => {
+    try {
+        const googleClientId = process.env.GOOGLE_CLIENT_ID;
+        const credential = req.body?.credential;
+        if (!googleClientId) {
+            return res.status(503).json({ message: "Google sign-in is not configured.", error: true, success: false });
+        }
+        if (typeof credential !== "string" || credential.length > 8192) {
+            return res.status(400).json({ message: "A valid Google credential is required.", error: true, success: false });
+        }
+
+        let payload;
+        try {
+            const ticket = await googleAuthClient.verifyIdToken({ idToken: credential, audience: googleClientId });
+            payload = ticket.getPayload();
+        } catch {
+            return res.status(401).json({ message: "Google authentication could not be verified.", error: true, success: false });
+        }
+
+        const now = Math.floor(Date.now() / 1000);
+        const validIssuer = payload?.iss === "https://accounts.google.com" || payload?.iss === "accounts.google.com";
+        const email = typeof payload?.email === "string" ? payload.email.trim().toLowerCase() : "";
+        if (!payload || payload.aud !== googleClientId || !validIssuer
+            || !Number.isFinite(payload.exp) || payload.exp <= now
+            || !Number.isFinite(payload.iat) || payload.iat > now + 60
+            || payload.email_verified !== true
+            || typeof payload.sub !== "string" || !payload.sub || payload.sub.length > 255
+            || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(401).json({ message: "Google authentication could not be verified.", error: true, success: false });
+        }
+
+        let user = await UserModel.findOne({ googleId: payload.sub });
+        if (!user) {
+            const escapedEmail = email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            const existingEmailUser = await UserModel.findOne({ email: { $regex: `^${escapedEmail}$`, $options: "i" } });
+            if (existingEmailUser) {
+                return res.status(409).json({
+                    message: "An account already uses this email. Please sign in using that account's existing method.",
+                    error: true,
+                    success: false
+                });
+            }
+
+            const password = await hashPassword(randomBytes(48).toString("base64url"));
+            const referralCode = typeof req.body?.referralCode === "string" ? req.body.referralCode.trim().toUpperCase() : "";
+            let inviter;
+            try { inviter = await findReferralInviter(referralCode); }
+            catch (error) { if (error instanceof ReferralAttributionError) return res.status(error.status).json({ message: error.message, error: true, success: false }); throw error; }
+            user = new UserModel({
+                name: typeof payload.name === "string" && payload.name.trim() ? payload.name.trim() : email.split("@")[0],
+                email,
+                googleId: payload.sub,
+                password,
+                mobile: null,
+                avatar: typeof payload.picture === "string" ? payload.picture : "",
+                verify_email: true,
+                role: "USER"
+            });
+            try {
+                user = await user.save();
+                await recordReferralAttribution({ inviter, referredUserId: user._id, referralCode });
+            } catch (error) {
+                if (error?.code !== 11000) throw error;
+                user = await UserModel.findOne({ googleId: payload.sub });
+                if (!user) {
+                    return res.status(409).json({ message: "An account already uses this email. Please sign in using that account's existing method.", error: true, success: false });
+                }
+            }
+        }
+
+        if (user.status !== "Active") {
+            return res.status(403).json({ message: `Your account is ${user.status}. Please contact support.`, error: true, success: false });
+        }
+
+        await UserModel.findByIdAndUpdate(user._id, { last_login_date: new Date() });
+        const accessToken = await generateAccessToken(user._id);
+        const refreshToken = await generateRefreshToken(user._id);
+        const cookiesOption = { httpOnly: true, secure: true, sameSite: "None" };
+        res.cookie("accessToken", accessToken, cookiesOption);
+        res.cookie("refreshToken", refreshToken, cookiesOption);
+
+        return res.status(200).json({
+            message: "Login successfully.",
+            error: false,
+            success: true,
+            data: { accessToken, refreshToken, role: user.role }
+        });
+    } catch (error) {
+        if (error instanceof ReferralAttributionError) return res.status(error.status).json({ message: error.message, error: true, success: false });
+        if (error?.code === 11000) {
+            return res.status(409).json({ message: "An account already uses this email. Please sign in using that account's existing method.", error: true, success: false });
+        }
+        return res.status(500).json({ message: "Google sign-in could not be completed.", error: true, success: false });
+    }
+};
 
 //Logout user
 export const logoutController = async (req, res) => {
@@ -635,6 +745,16 @@ export const userDetailsController = async (req, res) => {
             })
         }
 
+        if (user.role === "USER" && !user.referralCode) {
+            const code = `PM${user._id.toString().toUpperCase()}`;
+            try {
+                await UserModel.updateOne({ _id: user._id, referralCode: { $exists: false } }, { $set: { referralCode: code } });
+            } catch (error) {
+                if (error?.code !== 11000) throw error;
+            }
+            user.referralCode = (await UserModel.findById(user._id).select("referralCode").lean())?.referralCode;
+        }
+
         return res.status(200).json({
             message: "user details",
             data: user,
@@ -649,3 +769,23 @@ export const userDetailsController = async (req, res) => {
         });
     }
 }
+
+export const myReferralsController = async (req, res) => {
+    try {
+        let inviter = await UserModel.findById(req.userId).select("role referralCode");
+        if (!inviter || inviter.role !== "USER") return res.status(403).json({ success: false, error: true, message: "Referral program is available to customer accounts." });
+        if (!inviter.referralCode) {
+            inviter.referralCode = `PM${req.userId.toString().toUpperCase()}`;
+            await inviter.save();
+        }
+        const referrals = await ReferralModel.find({ inviterId: req.userId })
+            .populate("rewardCouponId", "code expiresAt")
+            .populate("referredUserId", "name")
+            .populate("qualifyingOrderId", "orderId order_status subTotalAmt")
+            .populate("latestOrderId", "orderId order_status subTotalAmt")
+            .sort({ createdAt: -1 }).lean();
+        return res.status(200).json({ success: true, error: false, data: { referralCode: inviter.referralCode, totalInvited: referrals.length, referrals } });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: true, message: error.message || "Unable to load referral details." });
+    }
+};

@@ -32,6 +32,7 @@ function Profile() {
         });
     }, [user]);
 
+
     const handleImageClick = () => {
         if (!loading) {
             fileInputRef.current.click();
@@ -140,6 +141,7 @@ function Profile() {
                 className="hidden"
                 onChange={handleChangeProfile}
             />
+
 
             {/* Profile Form */}
             <form onSubmit={handleSubmit} className="w-full mt-6 space-y-4">

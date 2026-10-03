@@ -105,15 +105,21 @@ function UserMenuForMobileUser() {
                                 >
                                     <FaBox size={18} /> <span>All Orders</span>
                                 </Link>
+                                <Link to="/dashboard/admin-referrals" className="flex items-center space-x-3 text-gray-700 text-lg hover:text-black transition duration-200 hover:bg-gray-200 p-2 rounded-lg">Referrals</Link>
+                                <Link to="/dashboard/store-settings" className="flex items-center space-x-3 text-gray-700 text-lg hover:text-black transition duration-200 hover:bg-gray-200 p-2 rounded-lg">Store settings</Link>
                             </>
                         )
                 }
-                <Link 
+                {user.role === "USER" && <Link 
                     to="/dashboard/my-orders" 
                     className="flex items-center space-x-3 text-gray-700 text-lg hover:text-black transition duration-200 hover:bg-gray-200 p-2 rounded-lg"
                 >
                     <MdOutlineListAlt size={20} /> <span>My Orders</span>
-                </Link>
+                </Link>}
+                {user.role === "USER" && <>
+                    <Link to="/dashboard/referrals" className="flex items-center space-x-3 text-gray-700 text-lg hover:text-black transition duration-200 hover:bg-gray-200 p-2 rounded-lg">Referrals</Link>
+                    <Link to="/dashboard/my-coupons" className="flex items-center space-x-3 text-gray-700 text-lg hover:text-black transition duration-200 hover:bg-gray-200 p-2 rounded-lg">My Coupons</Link>
+                </>}
                 <Link 
                     to="/dashboard/addresses" 
                     className="flex items-center space-x-3 text-gray-700 text-lg hover:text-black transition duration-200 hover:bg-gray-200 p-2 rounded-lg"

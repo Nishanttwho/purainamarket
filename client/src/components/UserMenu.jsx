@@ -41,9 +41,9 @@ function UserMenu({ closeMenu }) {
                 </Link>
             </div>
             <div className="text-sm grid gap-2 mt-3">
-                <Link to="/dashboard/my-orders" onClick={closeMenu} className="hover:text-blue-500 transition">
-                    My Orders
-                </Link>
+                {user.role === "USER" && <Link to="/dashboard/my-orders" onClick={closeMenu} className="hover:text-blue-500 transition">My Orders</Link>}
+                {user.role === "USER" && <Link to="/dashboard/referrals" onClick={closeMenu} className="hover:text-blue-500 transition">Referrals</Link>}
+                {user.role === "USER" && <Link to="/dashboard/my-coupons" onClick={closeMenu} className="hover:text-blue-500 transition">My Coupons</Link>}
                 <Link to="/dashboard/addresses" onClick={closeMenu} className="hover:text-blue-500 transition">
                     Saved Addresses
                 </Link>
@@ -86,6 +86,8 @@ function UserMenu({ closeMenu }) {
                                 >
                                     <span>All Orders</span>
                                 </Link>                                                                                                                       
+                                <Link to="/dashboard/admin-referrals" onClick={closeMenu} className="hover:text-blue-500 transition">Referrals</Link>
+                                <Link to="/dashboard/store-settings" onClick={closeMenu} className="hover:text-blue-500 transition">Store settings</Link>
                             </>
                         )
                 }

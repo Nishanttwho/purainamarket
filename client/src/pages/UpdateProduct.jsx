@@ -33,7 +33,7 @@ function UpdateProduct() {
         category: product?.category || [],
         subCategory: product?.subCategory || [],
         unit: product?.unit || "",
-        stock: product?.stock || "",
+        stock: product?.stock ?? "",
         price: product?.price || "",
         sellingType: product?.sellingType || "packed",
         pricePerKg: product?.pricePerKg || "",
@@ -61,7 +61,7 @@ function UpdateProduct() {
     !data.category.length || 
     !data.subCategory.length || 
     !data.unit || 
-    !data.stock || 
+    data.stock === "" || data.stock === null || !Number.isFinite(Number(data.stock)) || Number(data.stock) < 0 ||
     !data.price || 
     !data.description || 
     (Object.keys(data.more_details).length > 0 && 
@@ -191,12 +191,13 @@ function UpdateProduct() {
     }
     
     return (
-        <section>
-            <div className="p-2 bg-white shadow-xl flex items-center justify-between sticky top-0 z-10">
-                <h2 className="font-semibold">Update Product</h2>
+        <section className="admin-product-form-page">
+            <div className="admin-management-heading">
+                <div><p>Catalog</p><h2>Edit product</h2><span>Update product details, pricing, stock, and availability.</span></div>
             </div>
-            <div>
-                <div className="p-4 space-y-4">
+            <div className="admin-product-form-card">
+                <div className="admin-product-form-fields p-4 space-y-4">
+                    <div className="admin-form-section-heading"><div><h2>Product details</h2><p>Use the name customers will recognize.</p></div></div>
                     {/* Product Name */}
                     <div className="flex flex-col">
                         <label htmlFor="productName" className="text-gray-700 font-medium mb-1">
@@ -213,6 +214,7 @@ function UpdateProduct() {
                         />
                     </div>
 
+                    <div className="admin-form-section-heading"><div><h2>Product images</h2><p>Add clear images so customers can identify the item.</p></div></div>
                     {/* Image Upload Section */}
                     <div className="flex flex-col">
                         <p className="text-gray-700 font-medium mb-1">Image</p>
@@ -291,6 +293,7 @@ function UpdateProduct() {
                         </div>
                     </div>
 
+                    <div className="admin-form-section-heading"><div><h2>Categories</h2><p>Select a category and its matching subcategory.</p></div></div>
                     {/* Category Selector */}
                     <div className="flex flex-col mb-4">
                         <label htmlFor="categorySelect" className="text-gray-700 font-medium mb-1">
@@ -409,17 +412,18 @@ function UpdateProduct() {
                         </div>
                     </div>
 
+                    <div className="admin-form-section-heading"><div><h2>Price and stock</h2><p>Stock may be set to zero when an item is temporarily unavailable.</p></div></div>
                     {/* Additional Form Fields */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Unit */}
                         <div className="flex flex-col">
-                            <label htmlFor="unit" className="text-gray-700 font-medium mb-1">Unit</label>
+                            <label htmlFor="unit" className="text-gray-700 font-medium mb-1">Selling unit</label>
                             <input
                                 type="text"
                                 id="unit"
                                 name="unit"
                                 className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Enter Unit"
+                                placeholder="For example, 1 kg or 500 g"
                                 value={data.unit}
                                 onChange={handleChange}
                             />
@@ -427,21 +431,23 @@ function UpdateProduct() {
 
                         {/* Stock */}
                         <div className="flex flex-col">
-                            <label htmlFor="stock" className="text-gray-700 font-medium mb-1">Stock</label>
+                            <label htmlFor="stock" className="text-gray-700 font-medium mb-1">{data.sellingType === "loose" ? "Stock available (kg)" : "Units in stock"}</label>
                             <input
                                 type="number"
                                 id="stock"
                                 name="stock"
+                                min="0"
+                                step={data.sellingType === "loose" ? "0.001" : "1"}
                                 className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Enter Stock"
+                                placeholder={data.sellingType === "loose" ? "For example, 12.5" : "For example, 24"}
                                 value={data.stock}
                                 onChange={handleChange}
                             />
                         </div>
 
                         {/* Price */}
-                        <div className="flex flex-col">
-                            <label htmlFor="price" className="text-gray-700 font-medium mb-1">Price</label>
+                        {data.sellingType !== "loose" && <div className="flex flex-col">
+                                <label htmlFor="price" className="text-gray-700 font-medium mb-1">{data.sellingType === "loose" ? "Price per kilogram (₹)" : "Price per pack (₹)"}</label>
                             <input
                                 type="number"
                                 id="price"
@@ -451,7 +457,7 @@ function UpdateProduct() {
                                 value={data.price}
                                 onChange={handleChange}
                             />
-                        </div>
+                        </div>}
 
                         {/* Discount */}
                         <div className="flex flex-col">

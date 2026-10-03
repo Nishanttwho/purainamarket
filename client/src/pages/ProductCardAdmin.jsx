@@ -1,6 +1,5 @@
 /* eslint-disable react/prop-types */
-import { FaEdit } from "react-icons/fa";
-import { MdDelete } from "react-icons/md";
+import { Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AxiosToastError from "../utils/AxiosToastError";
 import Axios from "../utils/Axios";
@@ -17,6 +16,9 @@ function ProductCardAdmin({ data, fetchProductsData }) {
 
     // Check if the unit contains only digits
     const formattedUnit = /^\d+$/.test(data?.unit) ? `${data.unit} Unit` : data.unit;
+    const basePrice = Number(data?.sellingType === "loose" ? data?.pricePerKg ?? data?.price : data?.price) || 0;
+    const discount = Number(data?.discount) || 0;
+    const currentPrice = basePrice * (1 - discount / 100);
     // console.log(data); //degubging
     
 
@@ -50,45 +52,61 @@ function ProductCardAdmin({ data, fetchProductsData }) {
 
     return (
         <>
-            <div className="max-w-50 w-auto shadow-lg p-1 rounded-lg flex flex-col items-center text-center transition-transform transform hover:scale-105 relative bg-gray-50">
+            <article className="admin-product-card max-w-50 w-auto shadow-lg p-1 rounded-lg flex flex-col items-center text-center relative bg-gray-50">
                 
                 {/* Buttons Wrapper */}
                 <div className="absolute top-2 right-2 flex space-x-2">
                     {/* Edit Button */}
-                    <button 
-                        className="px-2 py-1 bg-blue-600 text-white font-medium 
-                                rounded-md shadow-md hover:bg-blue-700 transition-all duration-300"
+                    <button
+                        className="admin-card-icon-button"
+                        type="button"
+                        aria-label={`Edit ${data.name}`}
+                        title="Edit product"
                         onClick={() => 
                             navigate(`/dashboard/update-product/${data._id}`, 
                                 { state: { product: data } }
                             )
                         }
                     >
-                        <FaEdit size={15} />
+                        <Pencil size={16} />
                     </button>
 
                     {/* Delete Button */}
-                    <button 
-                        className="px-2 py-1 bg-red-600 text-white font-medium rounded-md shadow-md hover:bg-red-700 transition-all duration-300"
+                    <button
+                        className="admin-card-icon-button is-danger"
+                        type="button"
+                        aria-label={`Delete ${data.name}`}
+                        title="Delete product"
                         onClick={handleOpenConfirmDialog}
                     >
-                        <MdDelete size={15} />
+                        <Trash2 size={16} />
                     </button>
                 </div>
 
-                <div className="w-full h-32 flex items-center justify-center">
+                <div className="admin-product-card-image w-full h-32 flex items-center justify-center">
                     <img
                         src={data?.image?.[0]}  
                         alt={data?.name}
                         className="w-20 h-20 object-contain"
                     />
                 </div>
-                <p className="text-sm font-medium text-gray-800 line-clamp-2">{data?.name}</p>
-                <p className="text-xs text-slate-600">{formattedUnit}</p>
-            </div>
+                <div className="admin-product-card-info">
+                    <p className="admin-product-card-name text-sm font-medium text-gray-800 line-clamp-2">{data?.name}</p>
+                    <p className="admin-product-card-kind">{data?.sellingType === "loose" ? "Loose / open" : `Packed${formattedUnit ? ` · ${formattedUnit}` : ""}`}</p>
+                    <div className="admin-product-card-price">
+                        {discount > 0 && <span>₹{basePrice.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</span>}
+                        <strong>₹{currentPrice.toLocaleString("en-IN", { maximumFractionDigits: 2 })}{data?.sellingType === "loose" ? "/kg" : ""}</strong>
+                        {discount > 0 && <em>{discount}% off</em>}
+                    </div>
+                    <div className="admin-product-card-footer">
+                        <span>Stock: {data?.stock === null ? "Not tracked" : `${data?.stock ?? 0} ${data?.sellingType === "loose" ? "kg" : "units"}`}</span>
+                        <span className={data?.publish ? "is-published" : "is-unpublished"}>{data?.publish ? "Published" : "Hidden"}</span>
+                    </div>
+                </div>
+            </article>
             {showConfirmDialog && (
-                <div className="fixed inset-0 flex items-center justify-center bg-neutral-800/70 z-50">
-                    <div className="bg-white p-6 rounded-md shadow-lg text-center">
+                <div className="admin-confirm-overlay fixed inset-0 flex items-center justify-center bg-neutral-800/70 z-50">
+                    <div className="admin-confirm-dialog bg-white p-6 rounded-md shadow-lg text-center">
                         {loading ? (
                             <div className="grid place-items-center">
                                 <GridLoader color="#434343" margin={2} size={25} />

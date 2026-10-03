@@ -164,6 +164,60 @@
     gap: 17px;
 }
 
+.auth-google-section {
+    margin-top: 19px;
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #879189;
+    font-size: 11px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    flex: 1;
+    height: 1px;
+    background: #e3e9e4;
+    content: "";
+}
+
+.auth-google-control {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+    margin-top: 13px;
+}
+
+.auth-google-control > div {
+    max-width: 100%;
+}
+
+.auth-google-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid #d8e0da;
+    border-radius: 8px;
+    background: #fff;
+    color: #26342a;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.auth-google-fallback:hover {
+    background: #f7faf7;
+}
+
 .auth-field {
     display: flex;
     flex-direction: column;
@@ -294,7 +348,8 @@
 .auth-primary:focus-visible,
 .auth-icon-button:focus-visible,
 .auth-back-link:focus-visible,
-.auth-text-button:focus-visible {
+.auth-text-button:focus-visible,
+.auth-google-fallback:focus-visible {
     outline: 3px solid rgba(245, 205, 59, 0.72);
     outline-offset: 2px;
 }

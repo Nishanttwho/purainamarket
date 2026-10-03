@@ -9,7 +9,7 @@ function SearchBar() {
     const navigate = useNavigate();
     const location = useLocation();
     const [isSearchPage, setIsSearchPage] = useState(false);
-    const [isMobile, setIsMobile] = useMobile();
+    const [isMobile] = useMobile();
 
     useEffect(() => {
         setIsSearchPage(location.pathname === "/search");
@@ -29,7 +29,7 @@ function SearchBar() {
     }
 
     return (
-        <div className="w-full min-w-[300px] lg:min-w-[600px] rounded-lg border border-neutral-200 overflow-hidden flex items-center h-12 lg:h-full bg-slate-50">
+        <div className="flex h-12 w-full min-w-0 items-center overflow-hidden rounded-xl border border-emerald-100 bg-[#f7faf7] shadow-inner transition focus-within:border-emerald-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100 lg:min-w-[560px]">
             <div>
                 {
                     (isSearchPage && isMobile) 
@@ -39,7 +39,7 @@ function SearchBar() {
                         </Link>
                     ) 
                     : (
-                        <button className="flex justify-center items-center h-full p-3 text-neutral-800">
+                        <button className="flex h-full items-center justify-center p-3 text-[#176b2b]">
                             <IoSearch size={22} />
                         </button>
                     )
@@ -49,7 +49,7 @@ function SearchBar() {
             <div className="w-full h-full flex items-center">
                 {!isSearchPage ? (
                     // Placeholder animation when not on search page
-                    <div className="text-neutral-500 w-full" onClick={redirectToSearchPage}>
+                    <div className="w-full cursor-text text-sm text-neutral-500" onClick={redirectToSearchPage}>
                         <TypeAnimation
                             sequence={[...sequence]}
                             wrapper="span"
@@ -62,7 +62,7 @@ function SearchBar() {
                     <input 
                         type="text" 
                         placeholder="What are you looking for today?"
-                        className="bg-transparent w-full h-full outline-none"
+                        className="h-full w-full bg-transparent text-sm outline-none placeholder:text-neutral-400"
                         autoFocus={true}
                         onChange={handleOnChange}
                     />

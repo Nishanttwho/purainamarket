@@ -4,7 +4,9 @@ import AxiosToastError from "../utils/AxiosToastError";
 import Axios from "../utils/Axios";
 import summaryApi from "../common/summaryApi";
 import ProductCardAdmin from "./ProductCardAdmin";
-import { IoMdSearch } from "react-icons/io";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import { Plus, Search } from "lucide-react";
 import NoData from "../components/NoData";
 
 function ProductsAdmin() {
@@ -15,6 +17,10 @@ function ProductsAdmin() {
     const [allowToEnterPageNumber, setAllowToEnterPageNumber] = useState(false);
     const [inputPage, setInputPage] = useState(pageNum);
     const [search, setSearch] = useState("");
+    const [typeFilter, setTypeFilter] = useState("All types");
+    const [statusFilter, setStatusFilter] = useState("All statuses");
+    const [categoryFilter, setCategoryFilter] = useState("All categories");
+    const allCategory = useSelector((state) => state.product.allCategory);
 
     const handlePageInput = (e) => {
         const value = e.target.value;
@@ -62,6 +68,16 @@ function ProductsAdmin() {
         setPageNum(1);
         setSearch(value);
     };
+
+    const visibleProducts = productsData.filter((product) => {
+        const productType = product.sellingType || "packed";
+        const categoryIds = (product.category || []).map((category) => typeof category === "string" ? category : category?._id);
+        const typeMatches = typeFilter === "All types" || productType === typeFilter;
+        const statusMatches = statusFilter === "All statuses" || (statusFilter === "Published" ? product.publish : !product.publish);
+        const categoryMatches = categoryFilter === "All categories" || categoryIds.includes(categoryFilter);
+        return typeMatches && statusMatches && categoryMatches;
+    });
+
     useEffect(() => {
         const timeout = setTimeout(() => {
             fetchProductsData();
@@ -75,114 +91,39 @@ function ProductsAdmin() {
     }, [pageNum]);
 
     return (
-        <section>
-            <div className="h-[70vh] bottom-0">
-                {
-                    loading ? (
-                        <div className="flex justify-center items-center">
-                            <span className="animate-spin w-10 h-10 border-4 border-gray-300 border-t-green-500 rounded-full"></span>
-                        </div>
-                    ) : (
-                        <>
-                            {/* Heading & SearchBar */}
-                            <div className="p-2 bg-white shadow-xl flex items-center justify-between sticky top-0 z-10">
-                                <h2 className="font-semibold">Product Admin</h2>
-                                <div className="flex items-center border border-gray-300 rounded-md px-2 py-1 bg-white">
-                                    <IoMdSearch size={20} className="text-gray-500 mr-2" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search products..."
-                                        value={search}
-                                        onChange={handleSearchChange}
-                                        className="outline-none focus:ring-0 bg-transparent"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* No Data Found Page when there is no Product Available */}
-                            {!productsData.length && !loading && (
-                                <NoData
-                                    message="No Products Found"
-                                    subMessage="Try adding a new Products."
-                                />
-                            )}
-
-                            {/* Product Cards */}
-                            <div className="min-h-[55vh] p-4 overflow-y-hidden">
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-x-4 gap-y-2">
-                                    {productsData.map((p) => (
-                                        <ProductCardAdmin
-                                            key={p._id}
-                                            data={p}
-                                            fetchProductsData={fetchProductsData}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        </>
-                    )
-                }
-                {/* Page Navigation */}
-                <div className="flex justify-center items-center gap-2 sm:gap-4 mt-0 flex-wrap">
-                    {/* Hide on small screens */}
-                    <button
-                        className="hidden sm:block px-3 py-2 rounded-md shadow-sm transition duration-200 active:scale-95 
-                                    bg-green-600 text-white hover:bg-[#318616] disabled:bg-gray-400 disabled:text-gray-700 disabled:cursor-not-allowed"
-                        onClick={() => setPageNum(1)}
-                        disabled={pageNum === 1}
-                    >
-                        First
-                    </button>
-
-                    <button
-                        className="w-20 h-10 flex items-center justify-center rounded-md shadow-sm transition duration-200 active:scale-95 
-                                    bg-green-600 text-white hover:bg-[#318616] disabled:bg-gray-400 disabled:text-gray-700 disabled:cursor-not-allowed"
-                        onClick={() => setPageNum(pageNum - 1)}
-                        disabled={pageNum === 1}
-                    >
-                        Previous
-                    </button>
-
-                    <span
-                        className="text-gray-800 font-medium px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm cursor-pointer"
-                        onClick={() => setAllowToEnterPageNumber(true)}
-                    >
-                        {allowToEnterPageNumber ? (
-                            <input
-                                type="number"
-                                value={inputPage}
-                                onChange={handlePageInput}
-                                onBlur={handlePageSubmit}
-                                onKeyDown={(e) => e.key === "Enter" && handlePageSubmit()}
-                                className="w-12 text-center outline-none"
-                                autoFocus
-                            />
-                        ) : (
-                            `${pageNum}`
-                        )}
-                        / {totalPageCount}
-                    </span>
-
-                    <button
-                        className="w-20 h-10 flex items-center justify-center rounded-md shadow-sm transition duration-200 active:scale-95 
-                                    bg-green-600 text-white hover:bg-[#318616] disabled:bg-gray-400 disabled:text-gray-700 disabled:cursor-not-allowed"
-                        onClick={() => setPageNum(pageNum + 1)}
-                        disabled={pageNum === totalPageCount}
-                    >
-                        Next
-                    </button>
-
-                    {/* Hide on small screens */}
-                    <button
-                        className="hidden sm:block px-3 py-2 rounded-md shadow-sm transition duration-200 active:scale-95 
-                                    bg-green-600 text-white hover:bg-[#318616] disabled:bg-gray-400 disabled:text-gray-700 disabled:cursor-not-allowed"
-                        onClick={() => setPageNum(totalPageCount)}
-                        disabled={pageNum === totalPageCount}
-                    >
-                        Last
-                    </button>
-                </div>
+        <section className="admin-managed-page admin-product-list-page">
+            <header className="admin-management-heading">
+                <div><p>Catalog</p><h2>Products</h2><span>Search and maintain your store catalogue.</span></div>
+                <Link to="/dashboard/upload-product" className="admin-primary-action"><Plus size={17} /> Add product</Link>
+            </header>
+            <div className="admin-filter-toolbar">
+                <label className="admin-search-field">
+                    <Search size={17} aria-hidden="true" />
+                    <span className="sr-only">Search products</span>
+                    <input type="search" placeholder="Search products..." value={search} onChange={handleSearchChange} />
+                </label>
+                <label className="admin-filter-field"><span>Type</span><select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}><option>All types</option><option value="packed">Packed</option><option value="loose">Loose / open</option></select></label>
+                <label className="admin-filter-field"><span>Status</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option>All statuses</option><option>Published</option><option>Unpublished</option></select></label>
+                <label className="admin-filter-field"><span>Category</span><select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}><option>All categories</option>{allCategory.map((category) => <option key={category._id} value={category._id}>{category.name}</option>)}</select></label>
             </div>
+
+            {loading ? (
+                <div className="admin-loading-state" role="status">Loading products…</div>
+            ) : visibleProducts.length === 0 ? (
+                <div className="admin-empty-state"><NoData message={productsData.length ? "No products match these filters" : "No products found"} subMessage="Try another search or add a product to your catalogue." /><Link to="/dashboard/upload-product" className="admin-primary-action"><Plus size={17} /> Add product</Link></div>
+            ) : (
+                <div className="admin-product-grid">
+                    {visibleProducts.map((product) => <ProductCardAdmin key={product._id} data={product} fetchProductsData={fetchProductsData} />)}
+                </div>
+            )}
+
+            <nav className="admin-pagination" aria-label="Product pages">
+                <button onClick={() => setPageNum(1)} disabled={pageNum === 1}>First</button>
+                <button onClick={() => setPageNum(pageNum - 1)} disabled={pageNum === 1}>Previous</button>
+                <label>Page <input type="number" min="1" max={totalPageCount} value={allowToEnterPageNumber ? inputPage : pageNum} onFocus={() => setAllowToEnterPageNumber(true)} onChange={handlePageInput} onBlur={handlePageSubmit} onKeyDown={(event) => event.key === "Enter" && handlePageSubmit()} /> of {totalPageCount}</label>
+                <button onClick={() => setPageNum(pageNum + 1)} disabled={pageNum === totalPageCount}>Next</button>
+                <button onClick={() => setPageNum(totalPageCount)} disabled={pageNum === totalPageCount}>Last</button>
+            </nav>
         </section>
     );
 }

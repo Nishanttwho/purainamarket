@@ -10,6 +10,13 @@ const userSchema = new mongoose.Schema({
         required : [true, "provide email"],
         unique : true
     },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true,
+        select: false
+    },
+    referralCode: { type: String, unique: true, sparse: true, uppercase: true, trim: true },
     password : {
         type : String,
         required : [true, "provide password"]
@@ -21,7 +28,7 @@ const userSchema = new mongoose.Schema({
     mobile : {
         type : Number,
         default : null,
-        required: [true, "Provide mobile number"]
+        required: function () { return !this.googleId; }
     },
     refresh_token : {
         type : String,
@@ -68,7 +75,7 @@ const userSchema = new mongoose.Schema({
     },
     role : {
         type : String,
-        enum : ["ADMIN","USER"],
+        enum : ["ADMIN","RIDER","USER"],
         default : "USER"
     }
 },{

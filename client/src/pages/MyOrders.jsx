@@ -30,7 +30,9 @@ function MyOrders() {
                 toast.error(response.data.message);
             }
         } catch (error) {
-            toast.error(error.message || "Failed to fetch orders");
+            toast.error(error.response?.status === 403
+                ? "My Orders is available to customer accounts. Admins can monitor orders from All Orders."
+                : "Unable to load your orders. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -68,6 +70,8 @@ function MyOrders() {
                                             ? "bg-blue-500"
                                             : order.order_status === "Shipped"
                                             ? "bg-purple-500"
+                                            : order.order_status === "Out for Delivery"
+                                            ? "bg-blue-700"
                                             : order.order_status === "Delivered"
                                             ? "bg-green-500"
                                             : order.order_status === "Cancelled"
@@ -107,7 +111,7 @@ function MyOrders() {
                             <div className="flex flex-col gap-2">
                                 <div className="flex justify-between border-b border-gray-300 pb-4">
                                     <div className="flex gap-3 items-center">
-                                        {["Pending", "Processing", "Shipped"].includes(order.order_status) && (
+                                        {["Pending", "Processing", "Shipped", "Out for Delivery"].includes(order.order_status) && (
                                             <>
                                                 <div className="bg-[#f9fbc2] p-3 rounded-lg">
                                                     <FaRegClock className="text-[#b3b906]" />
@@ -142,6 +146,7 @@ function MyOrders() {
                                                     <p className="text-md font-bold">
                                                         Your order is <span className="text-red-500">{order.order_status}!</span>
                                                     </p>
+                                                    {order.cancellationReason && <p className="text-xs text-red-700">Reason: {order.cancellationReason}</p>}
                                                     <p className="text-xs text-[#666666]">
                                                         &#8377;{order.totalAmt} <span className="font-extrabold text-md">&nbsp;·&nbsp;</span> {changeDateFormat(order.createdAt)}
                                                     </p>

@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
 body {
-    @apply bg-slate-50;
+    @apply bg-[#f8faf7] text-slate-900;
     padding-top: 5rem;
+}
+
+.dashboard-route-main {
+    width: 100%;
+    min-height: 100vh;
+    margin-top: -5rem;
+    background: #f5f7f4;
+}
+
+@media (max-width: 1023px) {
+    body { padding-bottom: 5.5rem; }
+    .dashboard-route-main { margin-bottom: -5.5rem; }
 }
 
 .no-scrollbar {

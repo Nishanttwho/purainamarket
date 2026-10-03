@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IoCloseCircleSharp } from "react-icons/io5";
-import { TextField, Button } from "@mui/material";
+import { TextField, Button, MenuItem } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Axios from "../utils/Axios";
@@ -37,6 +37,18 @@ function AddNewAddressManually({ setOpenAddNewAddressMenu, setIsAddressMenuOpen 
     });
 
     const [openOtherAsSaveAddressAs, setOpenOtherAsSaveAddressAs] = useState(false);
+    const [deliveryAreas, setDeliveryAreas] = useState([]);
+    const [areasLoading, setAreasLoading] = useState(true);
+
+    useEffect(() => {
+        let active = true;
+        Axios(summaryApi.getActiveDeliveryAreas).then((response) => {
+            if (active && response.data?.success) setDeliveryAreas(response.data.data || []);
+        }).catch((error) => {
+            if (active) toast.error(error.response?.data?.message || "Could not load delivery areas.");
+        }).finally(() => { if (active) setAreasLoading(false); });
+        return () => { active = false; };
+    }, []);
 
     const handleChange = (field) => (event) => {
         setAddressData((prev) => ({ ...prev, [field]: event.target.value }));
@@ -76,21 +88,6 @@ function AddNewAddressManually({ setOpenAddNewAddressMenu, setIsAddressMenuOpen 
     return (
         <div className="fixed inset-0 bg-neutral-800/70 flex justify-center items-center h-full z-40 overflow-y-auto w-full p-4">
             <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative h-full overflow-scroll">
-
-                {/* Note Section */}
-                <p className="text-sm text-gray-500 bg-yellow-100 p-2 rounded-md mb-4">
-                    Note: Due to Google API costs, the automatic address selector has been removed.
-                    If you want to see a demo video, check it out here:&nbsp;
-                    <a
-                        href="https://www.youtube.com/watch?v=JJWzSoJBl7c&t=111s"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline"
-                    >
-                        Watch Demo
-                    </a>
-                    &nbsp;(timestamp: 1:51)
-                </p>
 
                 {/* Header */}
                 <div className="flex justify-between items-center border-b pb-3">
@@ -160,7 +157,10 @@ function AddNewAddressManually({ setOpenAddNewAddressMenu, setIsAddressMenuOpen 
                         <TextField label="Flat / House No / Building" fullWidth value={addressData.flatHouseNumber} onChange={handleChange("flatHouseNumber")} />
                         <TextField label="Floor (Optional)" fullWidth value={addressData.floor} onChange={handleChange("floor")} />
                         <TextField label="Street" fullWidth value={addressData.street} onChange={handleChange("street")} />
-                        <TextField label="Area" fullWidth value={addressData.area} onChange={handleChange("area")} />
+                        <TextField select required label="Delivery area" fullWidth value={addressData.area} onChange={handleChange("area")} disabled={areasLoading || !deliveryAreas.length}>
+                            <MenuItem value=""><em>{areasLoading ? "Loading areas…" : "Select delivery area"}</em></MenuItem>
+                            {deliveryAreas.map((deliveryArea) => <MenuItem key={deliveryArea._id || deliveryArea.name} value={deliveryArea.name}>{deliveryArea.name}</MenuItem>)}
+                        </TextField>
                         <TextField label="Landmark (Optional)" fullWidth value={addressData.landmark} onChange={handleChange("landmark")} />
                         <TextField label="City" fullWidth value={addressData.city} onChange={handleChange("city")} />
                         <TextField label="State" fullWidth value={addressData.state} onChange={handleChange("state")} />

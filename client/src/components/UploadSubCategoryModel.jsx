@@ -242,9 +242,9 @@ function UploadSubCategoryModel({ close, fetchSubCategories }) {
                                     ? "bg-[#0C831F] hover:bg-[#2c4e33] text-white cursor-pointer"
                                     : "bg-gray-400 text-white cursor-not-allowed"
                             }`}
-                            disabled={!data.name || !data.image}
+                            disabled={!data.name || !data.image || data.category.length === 0}
                         >
-                            Add Category
+                            Add subcategory
                         </button>
                     </form>
                 </div>

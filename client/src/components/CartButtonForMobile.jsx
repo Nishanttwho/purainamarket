@@ -34,10 +34,10 @@ function CartButtonForMobile({setIsCartButtonForMobile, isCartMenuOpen}) {
     }, [cartItem]);
     return (
 
-        <div className={`bg-[#318616] flex fixed lg:hidden xl:hidden left-0 right-0 bottom-0 z-50 h-[9vh] rounded-xl mx-4 mb-4 justify-between items-center px-2 ${isCartMenuOpen? "hidden" : ""}`}>
+        <div className={`fixed bottom-3 left-3 right-3 z-50 flex h-15 items-center justify-between rounded-2xl bg-[#176b2b] px-3 shadow-[0_10px_28px_rgba(23,107,43,0.3)] lg:hidden xl:hidden ${isCartMenuOpen? "hidden" : ""}`}>
             {/* Cart Logo, number of items and total price */}
             <div className="flex gap-2">
-                <button className="p-2 bg-[#379646] z-20 text-white rounded-lg">
+                <button className="z-20 rounded-xl bg-white/15 p-2 text-white">
                     <HiOutlineShoppingCart size={22}/>
                 </button>
                 <div className="flex flex-col text-white font-semibold">
@@ -47,7 +47,7 @@ function CartButtonForMobile({setIsCartButtonForMobile, isCartMenuOpen}) {
             </div>
             {/* View Cart */}
             <div 
-                className="flex items-center text-white cursor-pointer"
+                className="flex cursor-pointer items-center rounded-xl bg-white px-3 py-2 text-sm font-bold text-[#176b2b]"
                 onClick={() => {
                     navigate("/cart")
                     setIsCartButtonForMobile(false)
