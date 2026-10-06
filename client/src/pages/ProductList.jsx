@@ -160,7 +160,7 @@ function ProductList() {
             </div>
 
             {/* Scrollable Content */}
-            <div className="h-screen lg:mt-11 mt-16 grid grid-cols-[100px_1fr] md:grid-cols-[162px_1fr] lg:grid-cols-[260px_1fr]">
+            <div className="mt-16 grid h-screen min-w-0 grid-cols-[100px_minmax(0,1fr)] md:grid-cols-[162px_minmax(0,1fr)] lg:mt-11 lg:grid-cols-[260px_minmax(0,1fr)]">
                 {/* Left (SubCategory) */}
                 <div className="h-[80vh] overflow-y-auto flex flex-col rounded border border-gray-200 no-scrollbar">
                     {filteredSubCategories.map((subCategory, index) => (
@@ -200,8 +200,8 @@ function ProductList() {
                         </div>
                     ) : (
                         
-                        <div className="pl-2 pb-2 pr-2 overflow-y-scroll h-[80vh] border-r border-gray-200 bg-[#F4F6FB] top-0 no-scrollbar">
-                            <div className="py-4 pl-6 text-md w-full bg-white flex items-center justify-between top-0">
+                        <div className="top-0 h-[80vh] min-w-0 overflow-y-scroll overflow-x-hidden border-r border-gray-200 bg-[#F4F6FB] px-2 pb-2 no-scrollbar">
+                            <div className="flex w-full min-w-0 items-center justify-between bg-white py-4 pl-3 text-md sm:pl-6">
                                 <h2 className="font-bold">
                                     Buy{" "}
                                     {filteredSubCategories.find((sub) => sub._id === subCategoryId)?.name ||
@@ -215,7 +215,7 @@ function ProductList() {
                                     <p className="text-2xl text-[#F8CB46] font-bold">No Product Found</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 mx-auto container py-4">
+                                <div className="mx-auto grid w-full min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-1 py-4 md:grid-cols-3 lg:grid-cols-4">
                                     {products
                                         .sort((a, b) => (a.stock === 0) - (b.stock === 0))
                                         .map((product, index) => (

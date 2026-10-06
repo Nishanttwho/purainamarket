@@ -12,7 +12,7 @@ function ProductCardForProductListPage({ data }) {
 
 
     return (
-        <Link to={url} className="border py-2 px-3 grid gap-2 h-full w-full rounded cursor-pointer bg-white border-gray-200 relative text-xs">
+        <Link to={url} className="relative grid h-full w-full min-w-0 cursor-pointer gap-2 overflow-hidden rounded border border-gray-200 bg-white px-2 py-2 text-xs sm:px-3">
             {data.stock === 0 && (
                 <div className="z-30 absolute inset-0 flex items-center justify-center bg-gray-200/50 text-white text-[11px] font-bold rounded">
                     <span className="bg-gray-600 px-1 rounded-lg">Out of Stock</span>
@@ -34,16 +34,16 @@ function ProductCardForProductListPage({ data }) {
             <div className="p-1 rounded w-fit flex bg-[#F8F8F8] items-center justify-center mt-1">
                 <CiStopwatch size={12} /> <span className="text-[9px] sm:text-[10px] font-semibold">8 MINS</span>
             </div>
-            <div className="line-clamp-2 font-semibold text-sm sm:text-base">
+            <div className="line-clamp-2 min-w-0 break-words font-semibold text-sm sm:text-base">
                 {data.name}
             </div>
             <div className="text-[11px] sm:text-[12px] text-[#6B6666] flex items-center">
                 {formattedUnit}
             </div>
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                 {
                     data.discount > 0 ? (
-                        <div className="flex items-center gap-1">
+                        <div className="flex min-w-0 flex-wrap items-center gap-x-1">
                             <span className="text-[11px] font-bold line-through text-gray-500">
                                 &#8377;{data.price}
                             </span>
@@ -56,7 +56,7 @@ function ProductCardForProductListPage({ data }) {
                     )
                 }
                 {data.stock !== 0 && (
-                    <div className="w-fit">
+                    <div className="ml-auto w-fit max-w-full shrink-0">
                         <AddToCartButton data={data}/>
                     </div>
                 )}

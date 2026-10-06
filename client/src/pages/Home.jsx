@@ -8,7 +8,6 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 // import { validURLConvertor } from "../utils/validURLConvertor";
 import ProductViewByCategory from "../components/ProductViewByCategory";
-import india_last_min_app from "../assets/india's_last_min_app.avif"
 
 function Home() {
     
@@ -33,7 +32,7 @@ function Home() {
     };
 
     return (
-        <section className="w-full mx-auto bg-[#f8faf7] px-3 pt-3 sm:px-5 lg:px-10 xl:px-14">
+        <section className="w-full mx-auto bg-white px-3 pt-3 sm:px-5 lg:px-10 xl:px-14">
             {/* Large Screen Layout */}
             <div className="hidden lg:block w-full max-w-[1200px] mx-auto">
                 <div className="group w-full overflow-hidden rounded-[28px] border border-emerald-100 bg-white shadow-[0_12px_34px_rgba(18,83,36,0.10)]">
@@ -94,15 +93,14 @@ function Home() {
                         allCategory.map((category, index) => (
                             <div 
                                 key={index} 
-                                className="group flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border border-transparent bg-white p-2 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-emerald-100 hover:shadow-md"
+                                className="flex cursor-pointer items-center justify-center transition-transform hover:scale-105"
                                 onClick={() => handleRedirectToProductList(category._id, category.name)}
                             >
                                 <img 
                                     src={category.image} 
                                     alt={category.name || `Category ${index}`}
-                                    className="h-16 w-16 object-contain transition-transform duration-200 group-hover:scale-105 sm:h-20 sm:w-20 lg:h-24 lg:w-24"
+                                    className="h-auto w-full max-w-32 object-contain sm:max-w-36 lg:max-w-40"
                                 />
-                                <span className="mt-1 line-clamp-1 w-full text-center text-[11px] font-semibold text-slate-700 sm:text-xs">{category.name}</span>
                             </div>
                         ))
                     )}
@@ -124,11 +122,6 @@ function Home() {
                 </div>
             </div>}
 
-            {/* For md,sm and xs screens*/}
-            <div className="lg:hidden xl:hidden mt-6 w-full overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm">
-                {/* India's last-minute grocery delivery app */}
-                <img src={india_last_min_app} alt="PurainaMarket grocery delivery" className="w-full"/>
-            </div>
         </section>
     );
 }

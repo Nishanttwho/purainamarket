@@ -11,7 +11,7 @@ function ProductCard({data}) {
     const url = `products-list/${validURLConvertor(data.name)}-${data._id}`;
 
     return (
-        <Link to={url} className='group relative grid min-w-36 gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_2px_8px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg lg:min-w-52 lg:gap-3 lg:p-4'>
+        <Link to={url} className='group relative box-border grid h-72 w-36 min-w-36 max-w-36 flex-none grid-rows-[7rem_auto_minmax(2.5rem,auto)_auto_1fr] gap-1 overflow-hidden whitespace-normal rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_2px_8px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg sm:h-72 sm:w-40 sm:min-w-40 sm:max-w-40 lg:h-96 lg:w-52 lg:min-w-52 lg:max-w-52 lg:grid-rows-[9rem_auto_minmax(2.5rem,auto)_auto_1fr] lg:gap-3 lg:p-4'>
             
             {
                 data.discount > 0 && (
@@ -35,17 +35,17 @@ function ProductCard({data}) {
             <div className='mt-1 flex w-fit items-center justify-center rounded-md bg-emerald-50 px-1.5 py-1 text-[#397724]'>
                 <CiStopwatch size={12}/> <span className="text-[9px] font-semibold">8 MINS</span>
             </div>
-            <div className='line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-slate-800'>
+            <div className='line-clamp-2 min-h-10 min-w-0 break-words text-sm font-semibold leading-5 text-slate-800'>
                 {data.name}
             </div>
             <div className='text-xs font-medium text-slate-500 flex items-center'>
                 {formattedUnit}
             </div>
             {data?.sellingType === "loose" && <div className="text-[11px] font-semibold text-[#0C831F]">₹{data.pricePerKg ?? data.price}/kg</div>}
-            <div className='mt-1 flex items-center justify-between gap-2'>
+            <div className='mt-1 flex min-w-0 flex-wrap items-center justify-between gap-2'>
                 {
                     data.discount > 0 ? (
-                        <div className="flex items-center gap-1">
+                        <div className="flex min-w-0 flex-wrap items-center gap-x-1">
                             <span className="text-[11px] font-bold line-through text-gray-500">
                                 &#8377;{data.price}
                             </span>
@@ -57,7 +57,7 @@ function ProductCard({data}) {
                         <span className="text-sm font-extrabold text-slate-900">&#8377;{data.price}</span>
                     )
                 }
-                <div className="rounded w-fit">
+                <div className="ml-auto w-fit max-w-full shrink-0">
                     <AddToCartButton data={data}/>
                 </div>
             </div>

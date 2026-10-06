@@ -303,11 +303,22 @@ export const googleLoginController = async (req, res) => {
             const escapedEmail = email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
             const existingEmailUser = await UserModel.findOne({ email: { $regex: `^${escapedEmail}$`, $options: "i" } });
             if (existingEmailUser) {
-                return res.status(409).json({
-                    message: "An account already uses this email. Please sign in using that account's existing method.",
-                    error: true,
-                    success: false
-                });
+                if (existingEmailUser.googleId && existingEmailUser.googleId !== payload.sub) {
+                    return res.status(409).json({ message: "This Google account is linked to another account.", error: true, success: false });
+                }
+                try {
+                    user = await UserModel.findByIdAndUpdate(
+                        existingEmailUser._id,
+                        { $set: { googleId: payload.sub, verify_email: true } },
+                        { new: true, runValidators: true }
+                    );
+                } catch (error) {
+                    if (error?.code === 11000) {
+                        return res.status(409).json({ message: "This Google account is linked to another account.", error: true, success: false });
+                    }
+                    throw error;
+                }
+                if (!user) throw new Error("The existing account could not be linked.");
             }
 
             const password = await hashPassword(randomBytes(48).toString("base64url"));

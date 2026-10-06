@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FaGithub, FaXTwitter } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import fullLogo from "../assets/plogo.png";
+import mobileFooterGraphic from "../assets/mobile-footer-graphic.webp";
 
 function Footer() {
     const allCategory = useSelector(state => state.product.allCategory);
@@ -21,6 +22,33 @@ function Footer() {
     return (
         <footer className="border-t w-full">
             <div className="container mx-auto p-4">
+                <img src={mobileFooterGraphic} alt="Your daily grocery app · PurainaMarket" className="block h-auto w-full max-w-full md:hidden" />
+                <div className="mt-3 md:hidden">
+                    <button
+                        type="button"
+                        className="flex w-full items-center justify-between border-b border-slate-200 py-3 text-left font-semibold text-slate-900"
+                        aria-expanded={showCategories}
+                        onClick={() => setShowCategories((expanded) => !expanded)}
+                    >
+                        <span>All categories</span>
+                        <span aria-hidden="true" className="text-xl leading-none">{showCategories ? "−" : "+"}</span>
+                    </button>
+                    {showCategories && (
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-3">
+                            {allCategory.map((category) => (
+                                <button
+                                    key={category._id}
+                                    type="button"
+                                    className="text-left text-sm text-slate-600 hover:text-slate-900"
+                                    onClick={() => navigate(`/all-products-by-category/${category._id}`)}
+                                >
+                                    {category.name}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                <div className="hidden md:block">
                 <img src={fullLogo} alt="PurainaMarket" className="mb-3 block h-auto w-[min(44vw,180px)] max-w-full md:w-[190px] lg:w-[220px]" />
                 
                 {/* Collapsible Section for sm, md, xs */}
@@ -94,6 +122,7 @@ function Footer() {
                             <FaGithub  size={20} />
                         </a>
                     </div>
+                </div>
                 </div>
             </div>
         </footer>

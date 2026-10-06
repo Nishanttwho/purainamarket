@@ -81,7 +81,7 @@ function ProductViewByCategory({ id, name }) {
                 {/* Product List */}
                 <div 
                     ref={containerRef} 
-                    className="no-scrollbar flex gap-3 sm:gap-4 lg:gap-5 mx-auto py-4 overflow-x-auto scroll-smooth whitespace-nowrap"
+                    className="no-scrollbar flex items-stretch gap-3 sm:gap-4 lg:gap-5 mx-auto py-4 overflow-x-auto scroll-smooth"
                 >
                     {loading &&
                         loadingCardNumber.map((_, index) => (

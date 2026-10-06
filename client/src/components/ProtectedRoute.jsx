@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useOutletContext } from "react-router-dom";
+import { Navigate, useOutletContext } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { MdOutlineDesktopAccessDisabled } from "react-icons/md";
 
@@ -10,6 +10,8 @@ const ProtectedRoute = ({ element, allowedRoles }) => {
     if (!outletContext?.isUserReady) {
         return <div className="flex min-h-40 items-center justify-center">Loading account…</div>;
     }
+
+    if (!userRole) return <Navigate to="/" replace />;
 
     if (!allowedRoles.includes(userRole)) {
         return (

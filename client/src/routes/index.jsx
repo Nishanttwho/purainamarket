@@ -1,4 +1,4 @@
-import {createBrowserRouter} from "react-router-dom"
+import {createBrowserRouter, Navigate} from "react-router-dom"
 import App from "../App"
 import Home from "../pages/Home"
 import SearchPage from "../pages/SearchPage"
@@ -83,7 +83,7 @@ const router = createBrowserRouter([
             },
             {
                 path: "dashboard",
-                element: <Dashboard />,
+                element: <ProtectedRoute element={<Dashboard />} allowedRoles={["USER", "ADMIN", "RIDER"]} />,
                 children: [
                     {
                         index: true,
@@ -208,7 +208,7 @@ const router = createBrowserRouter([
             },
             {
                 path: "cart",
-                element: <ViewCart />
+                element: <ProtectedRoute element={<ViewCart />} allowedRoles={["USER", "ADMIN", "RIDER"]} />
             },
             // {
             //     path: "address",
@@ -217,24 +217,28 @@ const router = createBrowserRouter([
             {
                 path: "add-new-address",
                 // element: <AddNewAddress />
-                element: <AddNewAddressManually />
+                element: <ProtectedRoute element={<AddNewAddressManually />} allowedRoles={["USER", "ADMIN", "RIDER"]} />
             },
             {
                 path: "edit-address",
                 // element: <EditAddress />
-                element: <EditAddressManually />
+                element: <ProtectedRoute element={<EditAddressManually />} allowedRoles={["USER", "ADMIN", "RIDER"]} />
             },
             {
                 path: "checkout",
-                element: <CheckOut />
+                element: <ProtectedRoute element={<CheckOut />} allowedRoles={["USER", "ADMIN", "RIDER"]} />
             },
             {
                 path: "success",
-                element: <Success />
+                element: <ProtectedRoute element={<Success />} allowedRoles={["USER", "ADMIN", "RIDER"]} />
             },
             {
                 path: "cancel",
-                element: <Cancel />
+                element: <ProtectedRoute element={<Cancel />} allowedRoles={["USER", "ADMIN", "RIDER"]} />
+            },
+            {
+                path: "*",
+                element: <Navigate to="/" replace />
             },
         ]
     }

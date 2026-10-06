@@ -344,7 +344,7 @@ const Login = ({ setIsLoginOpen }) => {
                                                 <input
                                                     className="auth-input auth-identifier-input"
                                                     type="text"
-                                                    inputMode={identifier.includes("@") ? "email" : "tel"}
+                                                    inputMode="email"
                                                     autoComplete="username"
                                                     placeholder="you@example.com or 98765 43210"
                                                     value={identifier}

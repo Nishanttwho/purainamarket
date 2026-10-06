@@ -55,6 +55,7 @@ const responseMock = () => ({
 
 const configureUserModel = ({ googleUser = null, emailUser = null } = {}) => {
     let savedUser = null;
+    const updates = [];
     const queries = [];
     UserModel.findOne = async (query) => {
         queries.push(query);
@@ -64,9 +65,12 @@ const configureUserModel = ({ googleUser = null, emailUser = null } = {}) => {
         savedUser = this;
         return this;
     };
-    UserModel.findByIdAndUpdate = async () => ({});
+    UserModel.findByIdAndUpdate = async (...args) => {
+        updates.push(args);
+        return args[0] ? ({ _id: args[0], role: "USER", status: "Active" }) : ({});
+    };
     UserModel.updateOne = async () => ({});
-    return { getSavedUser: () => savedUser, queries };
+    return { getSavedUser: () => savedUser, queries, updates };
 };
 
 const requestForGoogleLogin = (body = {}) => ({ body: { credential: validCredential, ...body } });
@@ -178,19 +182,36 @@ test("preserves existing ADMIN and RIDER roles for already-linked Google identit
     }
 });
 
-test("refuses to auto-link or duplicate an existing local account by email", async () => {
+test("links a verified Google identity to an existing email account without creating a duplicate", async () => {
     mockVerifiedPayload();
-    const users = configureUserModel({ emailUser: { _id: userId, role: "USER" } });
+    const emailUser = { _id: userId, role: "USER", status: "Active", googleId: undefined, verify_email: false };
+    const users = configureUserModel({ emailUser });
+    const response = responseMock();
+
+    await googleLoginController(requestForGoogleLogin(), response);
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.body.success, true);
+    assert.equal(response.cookies.length, 2);
+    assert.equal(users.getSavedUser()?._id.toString(), emailUser._id.toString());
+    assert.deepEqual(users.queries[0], { googleId: "google-sub-123456" });
+    assert.equal(users.queries[1].email.$options, "i");
+    assert.equal(users.updates.length, 1);
+    assert.deepEqual(users.updates[0][1], { $set: { googleId: "google-sub-123456", verify_email: true } });
+});
+
+test("does not link a Google identity already owned by another account", async () => {
+    mockVerifiedPayload();
+    const emailUser = { _id: userId, role: "USER", status: "Active" };
+    const users = configureUserModel({ emailUser });
+    UserModel.findByIdAndUpdate = async () => { const error = new Error("duplicate key"); error.code = 11000; throw error; };
     const response = responseMock();
 
     await googleLoginController(requestForGoogleLogin(), response);
 
     assert.equal(response.statusCode, 409);
-    assert.equal(response.body.success, false);
     assert.equal(response.cookies.length, 0);
     assert.equal(users.getSavedUser(), null);
-    assert.deepEqual(users.queries[0], { googleId: "google-sub-123456" });
-    assert.equal(users.queries[1].email.$options, "i");
 });
 
 test("existing email/password login continues issuing the normal application tokens", async () => {

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 body {
-    @apply bg-[#f8faf7] text-slate-900;
+    @apply bg-white text-slate-900;
     padding-top: 5rem;
 }
 

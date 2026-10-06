@@ -1,33 +1,23 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { userCart } from "../provider/CartContext";
 import { useSelector } from "react-redux";
-import Axios from "../utils/Axios";
 import toast from "react-hot-toast";
-import AxiosToastError from "../utils/AxiosToastError";
-import summaryApi from "../common/summaryApi";
 import { Minus, Plus } from "lucide-react";
 
 function AddToCartButton({ data }) {
-    const { fetchCartItem, updateCartItem, deleteCartItem } = userCart();
+    const { addCartItem, updateCartItem, deleteCartItem } = userCart();
     const cartItem = useSelector(state => state.cartItem.cart);
     const isLoose = data?.sellingType === "loose";
     const config = data?.looseConfig || {};
-    const [cartItemDetails, setCartItemsDetails] = useState();
     const [chooserOpen, setChooserOpen] = useState(false);
     const [mode, setMode] = useState("weight");
     const [value, setValue] = useState("");
 
-    useEffect(() => {
-        if (!isLoose) setCartItemsDetails(cartItem.find(item => item.productId._id === data._id && item.sellingType !== "loose"));
-    }, [data, cartItem, isLoose]);
-
+    const cartItemDetails = !isLoose && cartItem.find(item => String(item.productId?._id || item.productId) === String(data?._id) && item.sellingType !== "loose");
     const addItem = async (payload = {}) => {
-        try {
-            const response = await Axios({ ...summaryApi.addToCart, data: { productId: data?._id, ...payload } });
-            if (response.data.success) { toast.success(response.data.message); fetchCartItem(); setChooserOpen(false); setValue(""); }
-            else toast.error(response.data.message);
-        } catch (error) { AxiosToastError(error); }
+        const result = await addCartItem(data, payload);
+        if (result) { setChooserOpen(false); setValue(""); }
     };
     const chooseLoose = (e) => {
         e.preventDefault(); e.stopPropagation();
