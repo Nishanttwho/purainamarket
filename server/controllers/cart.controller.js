@@ -1,6 +1,10 @@
 import UserModel from "../models/user.model.js"
 import CartProductModel from "../models/cartProduct.model.js"
 import ProductModel from "../models/product.model.js"
+import { pricewithDiscount } from "../utils/PriceWithDiscount.js";
+
+const isDatabaseObjectId = value => /^[a-f\d]{24}$/i.test(String(value || ""));
+const money = value => Number(Number(value || 0).toFixed(2));
 
 const looseLineDetails = (product, purchaseMode, selectedWeightKg, amount) => {
     const config = product.looseConfig || {};
@@ -12,7 +16,8 @@ const looseLineDetails = (product, purchaseMode, selectedWeightKg, amount) => {
         if (!Number.isFinite(weight) || weight <= 0) throw new Error("Choose a valid weight.");
         const isPreset = (config.presetWeightsKg || []).some(value => Number(value) === weight);
         if (!isPreset && !config.allowCustomWeight) throw new Error("Custom weights are not available for this product.");
-        return { purchaseMode, selectedWeightKg: weight, amount: null, linePrice: Number((weight * pricePerKg).toFixed(2)) };
+        const discountedRate = pricewithDiscount(pricePerKg, Number(product.discount) || 0);
+        return { purchaseMode, selectedWeightKg: weight, amount: null, linePrice: money(weight * discountedRate) };
     }
 
     if (purchaseMode === "amount") {
@@ -47,7 +52,7 @@ export const addToCartItemController = async (req, res) => {
         const isLoose = product.sellingType === "loose";
         const details = isLoose
             ? looseLineDetails(product, purchaseMode, selectedWeightKg, amount)
-            : { purchaseMode: null, selectedWeightKg: null, amount: null, linePrice: Number(product.price || 0) };
+            : { purchaseMode: null, selectedWeightKg: null, amount: null, linePrice: null };
 
         if (isLoose && product.stock !== null && details.selectedWeightKg > product.stock) {
             return res.status(400).json({ message: `Only ${product.stock} kg available in stock.`, error: true, success: false })
@@ -102,12 +107,25 @@ export const getCartItemsController = async (req, res) => {
         const userId = req.userId
 
         const cartItems = await CartProductModel.find({userId}).populate("productId")
+        const normalizedCartItems = cartItems.map((cartItem) => {
+            const item = typeof cartItem.toObject === "function" ? cartItem.toObject() : { ...cartItem };
+            const product = item.productId;
+            if (item.sellingType !== "loose") {
+                item.linePrice = null;
+            } else if (item.purchaseMode === "weight" && product) {
+                const rate = pricewithDiscount(Number(product.pricePerKg ?? product.price), Number(product.discount) || 0);
+                item.linePrice = money(Number(item.selectedWeightKg) * rate);
+            } else if (item.purchaseMode === "amount") {
+                item.linePrice = money(item.amount);
+            }
+            return item;
+        });
 
         return res.status(200).json({
             message: "Cart items fetched successfully.",
             error: false,
             success: true,
-            data: cartItems,
+            data: normalizedCartItems,
         })
 
     } catch (error) {
@@ -130,6 +148,10 @@ export const updateCartItemQuantityController = async (req, res) => {
                 error: true,
                 success: false,
             });
+        }
+
+        if (!isDatabaseObjectId(_id)) {
+            return res.status(400).json({ message: "Cart item ID must be a valid database ID.", error: true, success: false });
         }
 
         // Find the cart item and populate the product details
@@ -214,6 +236,10 @@ export const deleteItemFromCartController = async (req, res) => {
                 error : true,
                 success : false
             })
+        }
+
+        if (!isDatabaseObjectId(_id)) {
+            return res.status(400).json({ message: "Cart item ID must be a valid database ID.", error: true, success: false });
         }
 
         const deleteCartItem  = await CartProductModel.deleteOne({ _id, userId })

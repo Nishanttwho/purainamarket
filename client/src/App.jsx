@@ -12,7 +12,6 @@ import Axios from "./utils/Axios";
 import summaryApi from "./common/summaryApi";
 import { setAllCategory, setAllSubCategory, setLoadingCategory } from "./store/productSlice";
 import AxiosToastError from "./utils/AxiosToastError";
-import { handleAddItem } from "./store/cartProductSlice";
 import CartButtonForMobile from "./components/CartButtonForMobile"
 import CartSideMenu from "./components/CartSideMenu";
 import AddressMenu from "./components/AddressMenu";
@@ -108,22 +107,6 @@ function App() {
     }
   }
 
-  const fetchCartItem = async () => {
-    try {
-      const response = await Axios({
-        ...summaryApi.getCartItems,
-      })
-      // console.log("response: ", response);
-
-      if (response.data.success) {
-        dispatch(handleAddItem(response.data.data))
-      }
-
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
   const fetchAddress = async () => {
     try {
       const response = await Axios({
@@ -143,18 +126,11 @@ function App() {
   useEffect(() => {
     fetchUser()
     if (!location.pathname.startsWith("/rider")) {
-      fetchCartItem()
       fetchCategory()
       fetchSubCategory()
       fetchAddress()
     }
   }, [])
-
-  useEffect(() => {
-    if (user._id && !isRiderArea) { // Fetch cart only if the user is logged in
-      fetchCartItem();
-    }
-  }, [user, isRiderArea]);
 
   
   return (

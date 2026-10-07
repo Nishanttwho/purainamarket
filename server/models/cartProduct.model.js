@@ -21,8 +21,8 @@ const cartProductSchema = new mongoose.Schema({
     },
     selectedWeightKg : { type : Number, default : null, min : 0 },
     amount : { type : Number, default : null, min : 0 },
-    // Snapshot the payable line amount so a product price change does not
-    // silently alter an in-progress cart or order.
+    // Cart API responses normalize loose rows to their payable selection amount
+    // and keep packed rows null; current product prices drive cart and order quotes.
     linePrice : { type : Number, default : null, min : 0 },
     userId : {
         type : mongoose.Schema.ObjectId,

@@ -4,7 +4,7 @@ import { useAddress } from '../provider/AddressContext';
 import { CiLocationOn } from 'react-icons/ci';
 import { useNavigate } from 'react-router-dom';
 
-function CheckOutButton({grandTotal, totalItems, setIsAddressMenuOpen, setIsCartMenuOpen, totalPriceWithOutDiscount, otherCharge}) {
+function CheckOutButton({grandTotal, totalItems, setIsAddressMenuOpen, setIsCartMenuOpen, totalPriceWithOutDiscount, otherCharge, disabled = false}) {
 
     const navigate = useNavigate()
 
@@ -67,7 +67,8 @@ function CheckOutButton({grandTotal, totalItems, setIsAddressMenuOpen, setIsCart
                             <span className="text-xs">TOTAL</span>
                         </div>
                         <button 
-                            className="flex items-center gap-1 cursor-pointer"
+                            className={`flex items-center gap-1 ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+                            disabled={disabled}
                             onClick={handleProceed}
                         >
                             <span>Proceed</span>

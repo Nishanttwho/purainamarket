@@ -12,63 +12,68 @@ import feeding_india_icon_v6 from "../assets/feeding_india_icon_v6.webp"
 import empty_cart from "../assets/empty_cart.webp"
 import CheckOutButton from "./CheckOutButton";
 import { userCart } from "../provider/CartContext";
+import { useAddress } from "../provider/AddressContext";
+import Axios from "../utils/Axios";
+import summaryApi from "../common/summaryApi";
+import { discountedUnitPrice, getCartOriginalTotal, getCartSubtotal } from "../utils/cartPricing";
 
 function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButtonForMobile }) {
 
     const cartItem = useSelector((state) => state.cartItem.cart);
 
     const [loading, setLoading] = useState(false);
-    const [totalItems, setTotalItems] = useState(0);
-    const [totalPriceWithDiscount, setTotalPriceWithDiscount] = useState(0);
-    const [totalPriceWithOutDiscount, setTotalPriceWithOutDiscount] = useState(0);
-    const [totalSavings, setTotalSavings] = useState(0);
-    const [deliveryCharge, setDeliveryCharge] = useState(30);
+    const [checkoutQuote, setCheckoutQuote] = useState(null);
+    const [quoteSnapshot, setQuoteSnapshot] = useState({ cartKey: "", version: -1, addressId: "" });
     const [isDonationChecked, setIsDonationChecked] = useState(false);
     const [isCustomTipSelected, setIsCustomTipSelected] = useState(false);
     const [tipAmount, setTipAmount] = useState(0);
     const [clickAddTip, setClickAddTip] = useState(false);
     const [custonTipInput, setCustonTipInput] = useState(0)
 
-    const otherCharge = 4 + (isDonationChecked ? 1 : 0) + tipAmount + deliveryCharge;
-
-    const grandTotal = totalPriceWithDiscount + otherCharge
-
-    const {fetchCartItem} = userCart()
+    const { cartSyncVersion, isCartSyncing } = userCart()
+    const { addresses } = useAddress();
+    const defaultAddress = addresses.find(address => address.defaultAddress) || addresses[0];
+    const cartKey = JSON.stringify(cartItem.map(item => [item._id, item.quantity, item.purchaseMode, item.selectedWeightKg, item.amount]));
+    const totalItems = cartItem.reduce((total, item) => total + (item.sellingType === "loose" ? 1 : Number(item.quantity) || 0), 0);
+    const totalPriceWithDiscount = getCartSubtotal(cartItem);
+    const totalPriceWithOutDiscount = getCartOriginalTotal(cartItem);
+    const totalSavings = (totalPriceWithOutDiscount - totalPriceWithDiscount).toFixed(2);
+    const quoteIsCurrent = !isCartSyncing && quoteSnapshot.cartKey === cartKey && quoteSnapshot.version === cartSyncVersion && quoteSnapshot.addressId === String(defaultAddress?._id || "");
+    const quoteForAddress = quoteSnapshot.addressId === String(defaultAddress?._id || "") ? checkoutQuote : null;
+    const localSubtotal = getCartSubtotal(cartItem);
+    const freeMinimum = Number(quoteForAddress?.freeDeliveryMinimumOrderValue);
+    const standardDeliveryFee = (Number(quoteForAddress?.deliveryCharge) || 0) + (Number(quoteForAddress?.deliverySavings) || 0);
+    const deliveryCharge = quoteIsCurrent
+        ? Number(checkoutQuote?.deliveryCharge) || 0
+        : quoteForAddress?.freeDeliveryMinimumOrderValue !== null && quoteForAddress?.freeDeliveryMinimumOrderValue !== undefined && Number.isFinite(freeMinimum) && freeMinimum >= 0 && localSubtotal >= freeMinimum ? 0 : standardDeliveryFee;
+    const handlingCharge = Number(quoteForAddress?.handlingCharge) || 0;
+    const otherCharge = deliveryCharge + handlingCharge + (isDonationChecked ? 1 : 0) + tipAmount;
+    const grandTotal = Number(quoteIsCurrent ? checkoutQuote?.totalAmt : totalPriceWithDiscount + deliveryCharge + handlingCharge) + (isDonationChecked ? 1 : 0) + tipAmount;
 
     useEffect(() => {
-        fetchCartItem()
         document.body.classList.add("overflow-hidden");
         return () => {
             document.body.classList.remove("overflow-hidden");
         };
     }, []);
     useEffect(() => {
-        let itemsCount = 0;
-        let priceCountWithDiscount = 0;
-        let priceCountWithOutDiscount = 0;
-    
-        itemsCount = cartItem.reduce((prev, curr) => prev + (curr.sellingType === "loose" ? 1 : curr.quantity), 0);
-    
-        priceCountWithDiscount = parseFloat(
-            cartItem.reduce((prev, curr) =>
-                prev + (curr.linePrice ?? curr.productId.price * (1 - curr.productId.discount / 100)) * (curr.sellingType === "loose" ? 1 : curr.quantity), 0
-            ).toFixed(2)
-        );
-    
-        priceCountWithOutDiscount = parseFloat(
-            cartItem.reduce((prev, curr) =>
-                prev + (curr.linePrice ?? curr.productId.price) * (curr.sellingType === "loose" ? 1 : curr.quantity), 0
-            ).toFixed(2)
-        );
-    
-        setTotalItems(itemsCount);
-        setTotalPriceWithDiscount(priceCountWithDiscount);
-        setTotalPriceWithOutDiscount(priceCountWithOutDiscount);
-        setTotalSavings((priceCountWithOutDiscount - priceCountWithDiscount).toFixed(2));
-    
-        // Use priceCountWithDiscount instead of totalPriceWithDiscount
-        setDeliveryCharge(priceCountWithDiscount > 500 ? 0 : 30);
-    }, [cartItem]);
+        if (!cartItem.length || !defaultAddress?._id || isCartSyncing || cartItem.some(item => item.optimistic)) {
+            if (!cartItem.length || !defaultAddress?._id) {
+                setCheckoutQuote(null);
+                setQuoteSnapshot({ cartKey: "", version: -1, addressId: "" });
+            }
+            return undefined;
+        }
+        let active = true;
+        Axios({ ...summaryApi.getCheckoutQuote, data: { delivery_address_id: defaultAddress._id } })
+            .then(response => {
+                if (active && response.data?.success) {
+                    setCheckoutQuote(response.data.data);
+                    setQuoteSnapshot({ cartKey, version: cartSyncVersion, addressId: String(defaultAddress._id) });
+                }
+            }).catch(() => {});
+        return () => { active = false; };
+    }, [cartKey, cartItem, defaultAddress?._id, cartSyncVersion, isCartSyncing]);
     
 
     return (
@@ -119,7 +124,7 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
                                             <img src={clock} alt="" className="w-12 h-12 bg-[#F8F8F8] object-cover rounded-xl" />
                                             <div className="flex flex-col">
                                                 <span className="text-md font-bold text-black">Free delivery in 8 minutes</span>
-                                                <span className="text-xs text-gray-500">Shipment of 5 items</span>
+                                                <span className="text-xs text-gray-500">Shipment of {totalItems} {totalItems === 1 ? "item" : "items"}</span>
                                             </div>
                                         </div>
                                         {/* Products */}
@@ -140,14 +145,14 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
                                                                     item?.productId.discount > 0 ? (
                                                                         <div className="flex items-center gap-1">
                                                                             <span className="text-[11px] font-bold line-through text-gray-500">
-                                                                                &#8377;{item?.productId.price}
+                                                                                &#8377;{item?.sellingType === "loose" ? item?.productId.pricePerKg ?? item?.productId.price : item?.productId.price}
                                                                             </span>
                                                                             <span className="text-[11px] font-bold text-black">
-                                                                                &#8377;{(item?.productId.price - (item?.productId.price * item?.productId.discount / 100)).toFixed(2)}
+                                                                                &#8377;{discountedUnitPrice(item?.sellingType === "loose" ? item?.productId.pricePerKg ?? item?.productId.price : item?.productId.price, item?.productId.discount).toFixed(2)}
                                                                             </span>
                                                                         </div>
                                                                     ) : (
-                                                                        <span className="text-[11px] font-bold">&#8377;{item?.productId.price}</span>
+                                                                        <span className="text-[11px] font-bold">&#8377;{item?.sellingType === "loose" ? item?.productId.pricePerKg ?? item?.productId.price : item?.productId.price}{item?.sellingType === "loose" ? "/kg" : ""}</span>
                                                                     )
                                                                 }
                                                             </div>
@@ -190,9 +195,9 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
                                                     <span className="text-xs">Delivery charge</span>
                                                 </div>
                                                 <div>
-                                                    {deliveryCharge === 0 ? (
+                                                    {!quoteForAddress ? <span className="text-gray-500">Updating…</span> : deliveryCharge === 0 ? (
                                                         <div className="text-sm flex gap-1">
-                                                            <span className="line-through text-gray-700">&#8377;30</span>
+                                                            <span className="line-through text-gray-700">&#8377;{standardDeliveryFee}</span>
                                                             <span className="text-blue-500">FREE</span>
                                                         </div>
                                                     ) : (
@@ -206,7 +211,7 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
                                                     <HiShoppingBag />
                                                     <span className="text-xs">Handling charge</span>
                                                 </div>
-                                                <span className="text-xs">&#8377;4</span>
+                                                <span className="text-xs">{quoteForAddress ? `₹${handlingCharge}` : "Updating…"}</span>
                                             </div>
                                         </div>
                                         {/* Grand total */}
@@ -378,6 +383,7 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
                                         totalPriceWithOutDiscount={totalPriceWithOutDiscount}
                                         totalPriceWithDiscount={totalPriceWithDiscount}
                                         otherCharge={otherCharge}
+                                        disabled={addresses.length > 0 && (!quoteIsCurrent || isCartSyncing)}
                                     />
                                 </div>
                             ) : (

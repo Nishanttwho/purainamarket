@@ -13,6 +13,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import { Pagination } from "swiper/modules";
 import AddToCartButton from "../components/AddToCartButton";
+import { discountedUnitPrice } from "../utils/cartPricing";
 
 function ProductDetails() {
 
@@ -91,6 +92,7 @@ function ProductDetails() {
     useEffect(() => {
         fetchProductData();
         // console.log(productData);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     
     return (
@@ -224,7 +226,7 @@ function ProductDetails() {
                                     ) : productData?.discount > 0 ? (
                                         <div className="flex items-center gap-1">
                                             <span className="text-md font-bold text-black">
-                                                &#8377;{(productData?.price - (productData?.price * productData?.discount / 100)).toFixed(2)}
+&#8377;{discountedUnitPrice(productData?.sellingType === "loose" ? productData?.pricePerKg ?? productData?.price : productData?.price, productData?.discount).toFixed(2)}
                                             <span className="text-xs font-bold text-gray-500"> MRP</span>
                                             <span className="text-xs font-bold line-through text-gray-500">
                                                 &#8377;{productData?.price}
@@ -336,7 +338,7 @@ function ProductDetails() {
                                         &#8377;{productData?.price}
                                     </span>
                                     <span className="text-md font-bold text-black">
-                                        &#8377;{(productData?.price - (productData?.price * productData?.discount / 100)).toFixed(2)}
+&#8377;{discountedUnitPrice(productData?.sellingType === "loose" ? productData?.pricePerKg ?? productData?.price : productData?.price, productData?.discount).toFixed(2)}
                                     </span>
                                     <span className="text-white px-1 rounded bg-[#538CEE] font-semibold text-[x-small]">
                                         {`${productData?.discount}% OFF`}

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { validURLConvertor } from "../utils/validURLConvertor";
 import disscountBannerSVG from "../assets/disscountBanner.svg";
 import AddToCartButton from "./AddToCartButton";
+import { discountedUnitPrice } from "../utils/cartPricing";
 
 function ProductCardForProductListPage({ data }) {
 
@@ -48,7 +49,7 @@ function ProductCardForProductListPage({ data }) {
                                 &#8377;{data.price}
                             </span>
                             <span className="text-[11px] font-bold text-black">
-                                &#8377;{(data.price - (data.price * data.discount / 100)).toFixed(2)}
+                                &#8377;{discountedUnitPrice(data.price, data.discount).toFixed(2)}
                             </span>
                         </div>
                     ) : (

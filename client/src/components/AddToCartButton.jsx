@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { Minus, Plus } from "lucide-react";
 
 function AddToCartButton({ data }) {
-    const { addCartItem, updateCartItem, deleteCartItem } = userCart();
+    const { addCartItem, adjustCartItem } = userCart();
     const cartItem = useSelector(state => state.cartItem.cart);
     const isLoose = data?.sellingType === "loose";
     const config = data?.looseConfig || {};
@@ -39,6 +39,6 @@ function AddToCartButton({ data }) {
     </div>;
 
     const qty = cartItemDetails?.quantity || 0;
-    return cartItemDetails ? <div className={`flex w-full items-center rounded-lg text-sm font-bold text-white ${data?.stock === 0 ? "bg-gray-400" : "bg-[#176b2b]"}`}><button className="w-1/3 px-1 py-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); qty === 1 ? deleteCartItem(cartItemDetails._id) : updateCartItem(cartItemDetails._id, qty - 1); }} disabled={data?.stock === 0}><Minus size={16} /></button><span className="w-1/3 p-1 text-center">{qty}</span><button className="w-1/3 p-1" onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateCartItem(cartItemDetails._id, qty + 1); }} disabled={data?.stock === 0}><Plus size={16} /></button></div> : <button className={`rounded-lg border-2 px-3 py-1.5 text-xs font-extrabold tracking-wide transition ${data?.stock === 0 ? "border-gray-400 text-gray-400" : "border-[#318616] text-[#318616] hover:bg-[#318616] hover:text-white"}`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); addItem(); }} disabled={data?.stock === 0}>ADD</button>;
+    return cartItemDetails ? <div className={`flex w-full items-center rounded-lg text-sm font-bold text-white ${data?.stock === 0 ? "bg-gray-400" : "bg-[#176b2b]"}`}><button className="w-1/3 px-1 py-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); adjustCartItem(cartItemDetails._id, -1); }} disabled={data?.stock === 0}><Minus size={16} /></button><span className="w-1/3 p-1 text-center">{qty}</span><button className="w-1/3 p-1" onClick={(e) => { e.preventDefault(); e.stopPropagation(); adjustCartItem(cartItemDetails._id, 1); }} disabled={data?.stock === 0}><Plus size={16} /></button></div> : <button className={`rounded-lg border-2 px-3 py-1.5 text-xs font-extrabold tracking-wide transition ${data?.stock === 0 ? "border-gray-400 text-gray-400" : "border-[#318616] text-[#318616] hover:bg-[#318616] hover:text-white"}`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); addItem(); }} disabled={data?.stock === 0}>ADD</button>;
 }
 export default AddToCartButton;

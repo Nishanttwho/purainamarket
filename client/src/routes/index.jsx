@@ -73,6 +73,10 @@ const router = createBrowserRouter([
                 element: <UserMenuForMobileUser />
             },
             {
+                path: "account",
+                element: <Navigate to="/dashboard/profile" replace />
+            },
+            {
                 path: "rider",
                 element: <ProtectedRoute element={<RiderLayout />} allowedRoles={["RIDER"]} />,
                 children: [

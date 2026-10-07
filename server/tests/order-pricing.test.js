@@ -53,6 +53,13 @@ test("rebuilds a packed order and ignores client totals", async () => {
     assert.equal(checkout.totalAmt, 210);
 });
 
+test("packed discount pricing is consistent for a 160 rupee product at 20 percent off", async () => {
+    mockCheckoutData({ cart: [{ productId: product({ price: 160, discount: 20 }), quantity: 1, linePrice: 160 }] });
+    const checkout = await buildCheckout(userId, addressId);
+    assert.equal(checkout.itemList[0].linePrice, 128);
+    assert.equal(checkout.subTotalAmt, 128);
+});
+
 test("recalculates loose weight and amount orders using the product rate", async () => {
     const byWeight = product({ sellingType: "loose", pricePerKg: 200, discount: 10, looseConfig: { presetWeightsKg: [0.5], allowCustomWeight: false, allowAmount: true }, stock: 2 });
     const byAmount = product({ sellingType: "loose", pricePerKg: 100, discount: 0, looseConfig: { presetWeightsKg: [], allowCustomWeight: true, allowAmount: true }, stock: 2 });

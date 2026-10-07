@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { IoMdListBox } from "react-icons/io";
 import { HiShoppingBag } from "react-icons/hi";
@@ -16,6 +16,7 @@ import Axios from "../utils/Axios";
 import summaryApi from "../common/summaryApi";
 import { useStoreAvailability } from "../provider/StoreAvailabilityContext";
 import "./ViewCart.css";
+import { discountedUnitPrice, getCartOriginalTotal, getCartSubtotal } from "../utils/cartPricing";
 function ViewCart() {
 
     const capitalizeFirstLetter = (str) => {
@@ -31,39 +32,43 @@ function ViewCart() {
     // console.log(addresses);
     const defaultAddress = addresses.find(address => address.defaultAddress) || addresses[0];
 
-    const [loading, setLoading] = useState(true);
     const cartItem = useSelector((state) => state.cartItem.cart);
-    const [totalPriceWithDiscount, setTotalPriceWithDiscount] = useState(0);
-    const [totalPriceWithOutDiscount, setTotalPriceWithOutDiscount] = useState(0);
-    const [totalSavings, setTotalSavings] = useState(0);
+    const totalItems = cartItem.reduce((total, item) => total + (item.sellingType === "loose" ? 1 : Number(item.quantity) || 0), 0);
+    const totalPriceWithDiscount = getCartSubtotal(cartItem);
+    const totalPriceWithOutDiscount = getCartOriginalTotal(cartItem);
+    const totalSavings = (totalPriceWithOutDiscount - totalPriceWithDiscount).toFixed(2);
     const [checkoutQuote, setCheckoutQuote] = useState(null);
+    const [quoteSnapshot, setQuoteSnapshot] = useState({ cartKey: "", version: -1, addressId: "" });
     const [quoteLoading, setQuoteLoading] = useState(false);
     const [isDonationChecked, setIsDonationChecked] = useState(false);
     const [isCustomTipSelected, setIsCustomTipSelected] = useState(false);
     const [tipAmount, setTipAmount] = useState(0);
     const [clickAddTip, setClickAddTip] = useState(false);
     const [custonTipInput, setCustonTipInput] = useState(0)
-    const [totalItems, setTotalItems] = useState(0)
     const [couponInput, setCouponInput] = useState(location.state?.couponCode || "");
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [couponError, setCouponError] = useState("");
     const [couponLoading, setCouponLoading] = useState(false);
     const autoApplyAttempted = useRef(false);
+    const { deleteCartItem, isCartLoading, isCartSyncing, cartSyncVersion } = userCart()
+    const loading = isCartLoading;
 
-    const deliveryCharge = Number(checkoutQuote?.deliveryCharge) || 0;
-    const handlingCharge = Number(checkoutQuote?.handlingCharge) || 0;
-    const otherCharge = deliveryCharge + handlingCharge;
-    const displayedItemsTotal = Number(checkoutQuote?.subTotalAmt ?? totalPriceWithDiscount);
-    const grandTotal = Number(checkoutQuote?.totalAmt ?? (totalPriceWithDiscount + otherCharge - (Number(appliedCoupon?.discountAmount) || 0)));
     const cartKey = JSON.stringify(cartItem.map((item) => [item._id, item.quantity, item.purchaseMode, item.selectedWeightKg, item.amount]));
-    const couponDiscount = Number(checkoutQuote?.couponDiscount ?? appliedCoupon?.discountAmount) || 0;
-    const displayedSavings = (Number(totalSavings) + couponDiscount + (Number(checkoutQuote?.deliverySavings) || 0)).toFixed(2);
-
-    const { fetchCartItem, deleteCartItem } = userCart()
-
-    useEffect(() => {
-        fetchCartItem().finally(() => setLoading(false));
-    }, []);
+    const quoteIsCurrent = !isCartSyncing && quoteSnapshot.cartKey === cartKey && quoteSnapshot.version === cartSyncVersion && quoteSnapshot.addressId === String(defaultAddress?._id || "");
+    const quoteForAddress = quoteSnapshot.addressId === String(defaultAddress?._id || "") ? checkoutQuote : null;
+    const localSubtotal = getCartSubtotal(cartItem);
+    const freeDeliveryMinimum = Number(quoteForAddress?.freeDeliveryMinimumOrderValue);
+    const standardDeliveryFee = (Number(quoteForAddress?.deliveryCharge) || 0) + (Number(quoteForAddress?.deliverySavings) || 0);
+    const deliveryCharge = quoteIsCurrent
+        ? Number(checkoutQuote?.deliveryCharge) || 0
+        : quoteForAddress?.freeDeliveryMinimumOrderValue !== null && quoteForAddress?.freeDeliveryMinimumOrderValue !== undefined && Number.isFinite(freeDeliveryMinimum) && freeDeliveryMinimum >= 0 && localSubtotal >= freeDeliveryMinimum ? 0 : standardDeliveryFee;
+    const handlingCharge = Number(quoteForAddress?.handlingCharge) || 0;
+    const otherCharge = deliveryCharge + handlingCharge;
+    const displayedItemsTotal = quoteIsCurrent ? Number(checkoutQuote?.subTotalAmt ?? localSubtotal) : localSubtotal;
+    const couponIsCurrent = appliedCoupon?.cartKey === cartKey;
+    const couponDiscount = Number(quoteIsCurrent ? checkoutQuote?.couponDiscount : couponIsCurrent ? appliedCoupon?.discountAmount : 0) || 0;
+    const grandTotal = quoteIsCurrent ? Number(checkoutQuote?.totalAmt ?? (displayedItemsTotal + otherCharge - couponDiscount)) : displayedItemsTotal + otherCharge - couponDiscount;
+    const displayedSavings = (Number(totalSavings) + couponDiscount + (quoteIsCurrent ? Number(checkoutQuote?.deliverySavings) || 0 : 0)).toFixed(2);
 
     useEffect(() => {
         if (appliedCoupon && appliedCoupon.cartKey !== cartKey) {
@@ -72,7 +77,7 @@ function ViewCart() {
         }
     }, [cartKey, appliedCoupon]);
 
-    const applyCouponCode = async (codeValue) => {
+    const applyCouponCode = useCallback(async (codeValue) => {
         const code = codeValue.trim();
         if (!code) {
             setCouponError("Enter a coupon code.");
@@ -91,7 +96,7 @@ function ViewCart() {
         } finally {
             setCouponLoading(false);
         }
-    };
+    }, [cartKey]);
 
     const applyCoupon = (event) => {
         event.preventDefault();
@@ -103,51 +108,26 @@ function ViewCart() {
         autoApplyAttempted.current = true;
         applyCouponCode(location.state.couponCode || "");
         navigate(location.pathname, { replace: true, state: null });
-    }, [location.pathname, location.state, loading, cartItem.length, navigate]);
+    }, [location.pathname, location.state, loading, cartItem.length, navigate, applyCouponCode]);
 
     useEffect(() => {
-        let itemsCount = 0;
-        let priceCountWithDiscount = 0;
-        let priceCountWithOutDiscount = 0;
-
-        itemsCount = cartItem.reduce((prev, curr) => prev + (curr.sellingType === "loose" ? 1 : curr.quantity), 0);
-
-        priceCountWithDiscount = parseFloat(
-            cartItem.reduce((prev, curr) => {
-                const isLoose = curr.sellingType === "loose";
-                const price = Number(curr.productId.price);
-                const linePrice = isLoose
-                    ? Number(curr.linePrice ?? price)
-                    : price * (1 - (Number(curr.productId.discount) || 0) / 100);
-                return prev + linePrice * (isLoose ? 1 : Number(curr.quantity));
-            }, 0).toFixed(2)
-        );
-
-        priceCountWithOutDiscount = parseFloat(
-            cartItem.reduce((prev, curr) => {
-                const isLoose = curr.sellingType === "loose";
-                const linePrice = isLoose ? Number(curr.linePrice ?? curr.productId.price) : Number(curr.productId.price);
-                return prev + linePrice * (isLoose ? 1 : Number(curr.quantity));
-            }, 0).toFixed(2)
-        );
-
-        setTotalItems(itemsCount);
-        setTotalPriceWithDiscount(priceCountWithDiscount);
-        setTotalPriceWithOutDiscount(priceCountWithOutDiscount);
-        setTotalSavings((priceCountWithOutDiscount - priceCountWithDiscount).toFixed(2));
-    }, [cartItem]);
-
-    useEffect(() => {
-        if (!cartItem.length) return;
+        if (!cartItem.length || isCartSyncing || cartItem.some(item => item.optimistic)) {
+            if (!cartItem.length) setCheckoutQuote(null);
+            return undefined;
+        }
         let active = true;
         setQuoteLoading(true);
-        setCheckoutQuote(null);
         Axios({ ...summaryApi.getCheckoutQuote, data: { delivery_address_id: defaultAddress?._id, couponCode: appliedCoupon?.code || "" } })
-            .then((response) => { if (active && response.data?.success) setCheckoutQuote(response.data.data); })
+            .then((response) => {
+                if (active && response.data?.success) {
+                    setCheckoutQuote(response.data.data);
+                    setQuoteSnapshot({ cartKey, version: cartSyncVersion, addressId: String(defaultAddress?._id || "") });
+                }
+            })
             .catch((error) => { if (active) setCouponError(error.response?.data?.message || "Could not refresh checkout charges."); })
             .finally(() => { if (active) setQuoteLoading(false); });
         return () => { active = false; };
-    }, [cartKey, defaultAddress?._id, appliedCoupon?.code]);
+    }, [cartKey, cartItem, defaultAddress?._id, appliedCoupon?.code, cartSyncVersion, isCartSyncing]);
 
 
     return (
@@ -218,14 +198,14 @@ function ViewCart() {
                                                                 item?.productId.discount > 0 ? (
                                                                     <div className="cart-product-prices flex items-center gap-1">
                                                                         <span className="cart-product-original text-[11px] font-bold line-through text-gray-500">
-                                                                            &#8377;{item?.productId.price}
+                                                                            &#8377;{item?.sellingType === "loose" ? item?.productId.pricePerKg ?? item?.productId.price : item?.productId.price}
                                                                         </span>
                                                                         <span className="cart-product-current text-[11px] font-bold text-black">
-                                                                            &#8377;{(item?.productId.price - (item?.productId.price * item?.productId.discount / 100)).toFixed(2)}{item.sellingType === "loose" ? "/kg" : ""}
+                                                                        &#8377;{discountedUnitPrice(item?.sellingType === "loose" ? item?.productId.pricePerKg ?? item?.productId.price : item?.productId.price, item?.productId.discount).toFixed(2)}{item.sellingType === "loose" ? "/kg" : ""}
                                                                         </span>
                                                                     </div>
                                                                 ) : (
-                                                                    <span className="cart-product-current text-[11px] font-bold">&#8377;{item?.productId.price}{item.sellingType === "loose" ? "/kg" : ""}</span>
+                                                                    <span className="cart-product-current text-[11px] font-bold">&#8377;{item?.sellingType === "loose" ? item?.productId.pricePerKg ?? item?.productId.price : item?.productId.price}{item.sellingType === "loose" ? "/kg" : ""}</span>
                                                                 )
                                                             }
                                                         </div>
@@ -501,7 +481,7 @@ function ViewCart() {
                                     <div className={`cart-checkout-button-wrap flex justify-center text-white px-2 py-4 rounded-xl ${availability?.isOpen === true ? "bg-[#0C831F]" : "bg-slate-400"}`}>
                                         <button
                                             className="flex items-center gap-1 disabled:cursor-not-allowed"
-                                            disabled={quoteLoading || !checkoutQuote}
+                                            disabled={quoteLoading || isCartSyncing || !quoteIsCurrent || !checkoutQuote}
                                             onClick={() => {
                                                 if (availability?.isOpen !== true) {
                                                     toast.error(availability?.message || "Ordering is currently unavailable.");

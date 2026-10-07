@@ -9,6 +9,7 @@ import Axios from "../utils/Axios";
 import summaryApi from "../common/summaryApi";
 import { userCart } from "../provider/CartContext";
 import { useStoreAvailability } from "../provider/StoreAvailabilityContext";
+import { discountedUnitPrice } from "../utils/cartPricing";
 
 function CheckOut() {
 
@@ -222,14 +223,14 @@ function CheckOut() {
                                                 item?.productId.discount > 0 ? (
                                                     <div className="flex items-center gap-1">
                                                         <span className="text-[11px] font-bold line-through text-gray-500">
-                                                            &#8377;{item?.productId.price}
+                                                            &#8377;{item?.sellingType === "loose" ? item?.productId.pricePerKg ?? item?.productId.price : item?.productId.price}
                                                         </span>
                                                         <span className="text-[11px] font-bold text-gray-700">
-                                                            &#8377;{(item?.productId.price - (item?.productId.price * item?.productId.discount / 100)).toFixed(2)}
+                                                            &#8377;{discountedUnitPrice(item?.sellingType === "loose" ? item?.productId.pricePerKg ?? item?.productId.price : item?.productId.price, item?.productId.discount).toFixed(2)}{item?.sellingType === "loose" ? "/kg" : ""}
                                                         </span>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-[11px] font-bold text-gray-700">&#8377;{item?.productId.price}</span>
+                                                    <span className="text-[11px] font-bold text-gray-700">&#8377;{item?.sellingType === "loose" ? item?.productId.pricePerKg ?? item?.productId.price : item?.productId.price}{item?.sellingType === "loose" ? "/kg" : ""}</span>
                                                 )
                                             }
                                         </div>

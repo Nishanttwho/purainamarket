@@ -10,6 +10,7 @@ import { useSelector } from "react-redux";
 import { FaUserCircle } from "react-icons/fa";
 import UserMenu from "./UserMenu";
 import { IoMdArrowDropdown, IoMdArrowDropup } from "react-icons/io";
+import { getCartSubtotal } from "../utils/cartPricing";
 
 function Header({ setIsLoginOpen, setIsCartMenuOpen }) {
     const [isMobile] = useMobile();
@@ -41,9 +42,7 @@ function Header({ setIsLoginOpen, setIsCartMenuOpen }) {
         itemsCount = cartItem.reduce((prev, curr) => {
             return prev + (curr.sellingType === "loose" ? 1 : curr.quantity);
         }, 0)
-        priceCount = parseFloat(cartItem.reduce((prev, curr) => {
-            return prev + (curr.linePrice ?? curr.productId.price * (1 - curr.productId.discount / 100)) * (curr.sellingType === "loose" ? 1 : curr.quantity);
-        }, 0).toFixed(2));
+        priceCount = getCartSubtotal(cartItem);
 
         setTotalItems(itemsCount);
         setTotalPrice(priceCount);
