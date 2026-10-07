@@ -74,6 +74,27 @@ test("recalculates loose weight and amount orders using the product rate", async
     assert.equal(checkout.subTotalAmt, 190);
 });
 
+test("uses a loose product's selected 100 g price basis for weight and amount checkout", async () => {
+    const basisProduct = product({
+        sellingType: "loose",
+        price: 23,
+        priceUnitGrams: 100,
+        pricePerKg: 230,
+        discount: 17,
+        looseConfig: { presetWeightsKg: [0.1], allowCustomWeight: false, allowAmount: true },
+        stock: 1,
+    });
+    mockCheckoutData({ cart: [
+        { productId: basisProduct, purchaseMode: "weight", selectedWeightKg: 0.1, amount: null },
+        { productId: basisProduct, purchaseMode: "amount", selectedWeightKg: 99, amount: 38 },
+    ] });
+    const checkout = await buildCheckout(userId, addressId);
+    assert.equal(checkout.itemList[0].linePrice, 19);
+    assert.equal(checkout.itemList[1].selectedWeightKg, 0.2);
+    assert.equal(checkout.itemList[1].linePrice, 38);
+    assert.equal(checkout.subTotalAmt, 57);
+});
+
 test("uses the highest enabled category handling fee and applies the selected area's free-delivery threshold", async () => {
     const categoryIds = [new mongoose.Types.ObjectId(), new mongoose.Types.ObjectId()];
     const itemProduct = product({ category: categoryIds });

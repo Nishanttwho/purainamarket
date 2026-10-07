@@ -67,7 +67,7 @@ const orderQuery = (orderIdentifier) => {
 const populateOrder = (query) => query
     .populate("userId", "name email mobile")
     .populate("riderId", "name email mobile")
-    .populate("itemList.productId", "name image unit price pricePerKg discount sellingType")
+    .populate("itemList.productId", "name image unit price pricePerKg priceUnitGrams discount sellingType")
     .populate("delivery_address");
 
 const availableOrderFilter = {

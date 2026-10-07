@@ -7,6 +7,7 @@ import summaryApi from "../common/summaryApi";;
 import toast from "react-hot-toast";
 import { useState } from "react";
 import GridLoader from "react-spinners/GridLoader";
+import { getLooseBaseUnitPrice, getLooseDiscountedUnitPrice, getLoosePriceUnitLabel } from "../utils/loosePricing";
 function ProductCardAdmin({ data, fetchProductsData }) {
     
     const navigate = useNavigate();
@@ -16,9 +17,9 @@ function ProductCardAdmin({ data, fetchProductsData }) {
 
     // Check if the unit contains only digits
     const formattedUnit = /^\d+$/.test(data?.unit) ? `${data.unit} Unit` : data.unit;
-    const basePrice = Number(data?.sellingType === "loose" ? data?.pricePerKg ?? data?.price : data?.price) || 0;
+    const basePrice = Number(data?.sellingType === "loose" ? getLooseBaseUnitPrice(data) : data?.price) || 0;
     const discount = Number(data?.discount) || 0;
-    const currentPrice = basePrice * (1 - discount / 100);
+    const currentPrice = data?.sellingType === "loose" ? getLooseDiscountedUnitPrice(data) : basePrice * (1 - discount / 100);
     // console.log(data); //degubging
     
 
@@ -95,7 +96,7 @@ function ProductCardAdmin({ data, fetchProductsData }) {
                     <p className="admin-product-card-kind">{data?.sellingType === "loose" ? "Loose / open" : `Packed${formattedUnit ? ` · ${formattedUnit}` : ""}`}</p>
                     <div className="admin-product-card-price">
                         {discount > 0 && <span>₹{basePrice.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</span>}
-                        <strong>₹{currentPrice.toLocaleString("en-IN", { maximumFractionDigits: 2 })}{data?.sellingType === "loose" ? "/kg" : ""}</strong>
+                        <strong>₹{currentPrice.toLocaleString("en-IN", { maximumFractionDigits: 2 })}{data?.sellingType === "loose" ? ` / ${getLoosePriceUnitLabel(data)}` : ""}</strong>
                         {discount > 0 && <em>{discount}% off</em>}
                     </div>
                     <div className="admin-product-card-footer">

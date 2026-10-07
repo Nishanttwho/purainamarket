@@ -1,14 +1,14 @@
 import UserModel from "../models/user.model.js"
 import CartProductModel from "../models/cartProduct.model.js"
 import ProductModel from "../models/product.model.js"
-import { pricewithDiscount } from "../utils/PriceWithDiscount.js";
+import { getLooseDiscountedPricePerKg, getLoosePricePerKg } from "../utils/loosePricing.js";
 
 const isDatabaseObjectId = value => /^[a-f\d]{24}$/i.test(String(value || ""));
 const money = value => Number(Number(value || 0).toFixed(2));
 
 const looseLineDetails = (product, purchaseMode, selectedWeightKg, amount) => {
     const config = product.looseConfig || {};
-    const pricePerKg = Number(product.pricePerKg ?? product.price);
+    const pricePerKg = getLoosePricePerKg(product);
     if (!Number.isFinite(pricePerKg) || pricePerKg <= 0) throw new Error("This loose product has no valid price per kg.");
 
     if (purchaseMode === "weight") {
@@ -16,7 +16,7 @@ const looseLineDetails = (product, purchaseMode, selectedWeightKg, amount) => {
         if (!Number.isFinite(weight) || weight <= 0) throw new Error("Choose a valid weight.");
         const isPreset = (config.presetWeightsKg || []).some(value => Number(value) === weight);
         if (!isPreset && !config.allowCustomWeight) throw new Error("Custom weights are not available for this product.");
-        const discountedRate = pricewithDiscount(pricePerKg, Number(product.discount) || 0);
+        const discountedRate = getLooseDiscountedPricePerKg(product);
         return { purchaseMode, selectedWeightKg: weight, amount: null, linePrice: money(weight * discountedRate) };
     }
 
@@ -26,7 +26,7 @@ const looseLineDetails = (product, purchaseMode, selectedWeightKg, amount) => {
         if (!Number.isFinite(spend) || spend <= 0) throw new Error("Enter a valid amount.");
         // The derived weight is retained for inventory fulfilment only; the UI
         // deliberately renders only the amount for this selection.
-        return { purchaseMode, selectedWeightKg: Number((spend / pricePerKg).toFixed(3)), amount: spend, linePrice: Number(spend.toFixed(2)) };
+        return { purchaseMode, selectedWeightKg: Number((spend / getLooseDiscountedPricePerKg(product)).toFixed(3)), amount: spend, linePrice: Number(spend.toFixed(2)) };
     }
     throw new Error("Choose a weight or amount for this loose product.");
 };
@@ -113,7 +113,7 @@ export const getCartItemsController = async (req, res) => {
             if (item.sellingType !== "loose") {
                 item.linePrice = null;
             } else if (item.purchaseMode === "weight" && product) {
-                const rate = pricewithDiscount(Number(product.pricePerKg ?? product.price), Number(product.discount) || 0);
+                const rate = getLooseDiscountedPricePerKg(product);
                 item.linePrice = money(Number(item.selectedWeightKg) * rate);
             } else if (item.purchaseMode === "amount") {
                 item.linePrice = money(item.amount);

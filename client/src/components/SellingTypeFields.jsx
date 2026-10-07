@@ -1,7 +1,8 @@
 /* eslint-disable react/prop-types */
 function SellingTypeFields({ data, setData }) {
     const config = data.looseConfig || { presetWeightsKg: [0.25, 0.5, 1, 2, 5], presetAmounts: [10, 50, 100], allowCustomWeight: true, allowAmount: true };
-    const updateConfig = (key, value) => setData(prev => ({ ...prev, looseConfig: { ...config, [key]: value } }));
+    const updateConfig = (key, value) => setData((prev) => ({ ...prev, looseConfig: { ...config, [key]: value } }));
+
     return (
         <section className="admin-selling-config">
             <div className="admin-form-section-heading">
@@ -12,17 +13,33 @@ function SellingTypeFields({ data, setData }) {
             </div>
             <label className="admin-form-field">
                 <span>Selling type</span>
-                <select value={data.sellingType || "packed"} onChange={(event) => setData((prev) => ({ ...prev, sellingType: event.target.value }))}>
+                <select value={data.sellingType || "packed"} onChange={(event) => setData((prev) => ({
+                    ...prev,
+                    sellingType: event.target.value,
+                    ...(event.target.value === "loose" ? { unit: "1 kg", priceUnitGrams: prev.priceUnitGrams || 1000 } : {}),
+                }))}>
                     <option value="packed">Packed product</option>
                     <option value="loose">Loose / open product</option>
                 </select>
             </label>
             {data.sellingType === "loose" && (
                 <div className="admin-loose-config">
-                    <p className="admin-form-help">Set the per-kilogram rate, then choose which quick purchase options customers can use.</p>
+                    <p className="admin-form-help">Set the price for the selected selling unit. Weight choices and rupee purchases are converted from this price.</p>
                     <label className="admin-form-field">
-                        <span>Price per kilogram (₹)</span>
-                        <input type="number" min="0" step="0.01" value={data.pricePerKg || ""} onChange={(event) => setData((prev) => ({ ...prev, pricePerKg: event.target.value, price: event.target.value }))} placeholder="For example, 400" />
+                        <span>Pricing unit</span>
+                        <select value={data.priceUnitGrams || 1000} onChange={(event) => {
+                            const unitGrams = Number(event.target.value);
+                            setData((prev) => ({ ...prev, priceUnitGrams: unitGrams, unit: unitGrams === 1000 ? "1 kg" : `${unitGrams} g` }));
+                        }}>
+                            <option value={100}>100 g</option>
+                            <option value={250}>250 g</option>
+                            <option value={500}>500 g</option>
+                            <option value={1000}>1 kg</option>
+                        </select>
+                    </label>
+                    <label className="admin-form-field">
+                        <span>Price for {Number(data.priceUnitGrams || 1000) === 1000 ? "1 kg" : `${data.priceUnitGrams || 1000} g`} (₹)</span>
+                        <input type="number" min="0" step="0.01" value={data.price || ""} onChange={(event) => setData((prev) => ({ ...prev, price: event.target.value, pricePerKg: Number(event.target.value) * 1000 / Number(prev.priceUnitGrams || 1000) }))} placeholder="Enter price for this unit" />
                     </label>
                     <label className="admin-form-field">
                         <span>Preset weights (kg)</span>
@@ -46,4 +63,5 @@ function SellingTypeFields({ data, setData }) {
         </section>
     );
 }
+
 export default SellingTypeFields;

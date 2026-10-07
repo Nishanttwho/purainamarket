@@ -17,6 +17,7 @@ import summaryApi from "../common/summaryApi";
 import { useStoreAvailability } from "../provider/StoreAvailabilityContext";
 import "./ViewCart.css";
 import { discountedUnitPrice, getCartOriginalTotal, getCartSubtotal } from "../utils/cartPricing";
+import { getLooseBaseUnitPrice, getLooseDiscountedUnitPrice, getLoosePriceUnitLabel } from "../utils/loosePricing";
 function ViewCart() {
 
     const capitalizeFirstLetter = (str) => {
@@ -198,14 +199,14 @@ function ViewCart() {
                                                                 item?.productId.discount > 0 ? (
                                                                     <div className="cart-product-prices flex items-center gap-1">
                                                                         <span className="cart-product-original text-[11px] font-bold line-through text-gray-500">
-                                                                            &#8377;{item?.sellingType === "loose" ? item?.productId.pricePerKg ?? item?.productId.price : item?.productId.price}
+                                                                            {item?.sellingType === "loose" && "MRP "}&#8377;{item?.sellingType === "loose" ? getLooseBaseUnitPrice(item?.productId) : item?.productId.price}
                                                                         </span>
                                                                         <span className="cart-product-current text-[11px] font-bold text-black">
-                                                                        &#8377;{discountedUnitPrice(item?.sellingType === "loose" ? item?.productId.pricePerKg ?? item?.productId.price : item?.productId.price, item?.productId.discount).toFixed(2)}{item.sellingType === "loose" ? "/kg" : ""}
+                                                                        &#8377;{item?.sellingType === "loose" ? getLooseDiscountedUnitPrice(item?.productId).toFixed(2) : discountedUnitPrice(item?.productId.price, item?.productId.discount).toFixed(2)}{item.sellingType === "loose" ? ` / ${getLoosePriceUnitLabel(item?.productId)}` : ""}
                                                                         </span>
                                                                     </div>
                                                                 ) : (
-                                                                    <span className="cart-product-current text-[11px] font-bold">&#8377;{item?.sellingType === "loose" ? item?.productId.pricePerKg ?? item?.productId.price : item?.productId.price}{item.sellingType === "loose" ? "/kg" : ""}</span>
+                                                                    <span className="cart-product-current text-[11px] font-bold">&#8377;{item?.sellingType === "loose" ? getLooseBaseUnitPrice(item?.productId) : item?.productId.price}{item.sellingType === "loose" ? ` / ${getLoosePriceUnitLabel(item?.productId)}` : ""}</span>
                                                                 )
                                                             }
                                                         </div>

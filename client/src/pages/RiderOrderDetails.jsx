@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import Axios from "../utils/Axios";
 import summaryApi from "../common/summaryApi";
 import { formatOrderItemQuantity, getOrderPaymentMethod, getOrderPaymentStatus, printOrderReceipt } from "../utils/printOrderReceipt";
+import { getLoosePricePerKg, getLoosePriceUnitLabel } from "../utils/loosePricing";
 
 const currency = (amount) => `₹${(Number(amount) || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 const addressLines = (address = {}) => [address.flatHouseNumber, address.floor, address.street, address.area, address.landmark, address.city, address.state, address.pincode, address.country].filter(Boolean);
@@ -12,7 +13,7 @@ const itemLineTotal = (item) => {
     if (item.linePrice !== null && item.linePrice !== undefined) return Number(item.linePrice) || 0;
     const product = item.productId;
     if (!product) return 0;
-    if (item.sellingType === "loose") return item.purchaseMode === "amount" ? Number(item.amount) || 0 : (Number(product.pricePerKg) || 0) * (Number(item.selectedWeightKg) || 0);
+    if (item.sellingType === "loose") return item.purchaseMode === "amount" ? Number(item.amount) || 0 : getLoosePricePerKg(product) * (Number(item.selectedWeightKg) || 0);
     return (Number(product.price) || 0) * (Number(item.quantity) || 0) * (1 - (Number(product.discount) || 0) / 100);
 };
 
@@ -93,7 +94,7 @@ function RiderOrderDetails() {
                 <div className="rounded-xl border border-slate-200 bg-white p-4"><h2 className="font-bold">Delivery</h2><p className="mt-3 flex gap-2 text-sm leading-6 text-slate-700"><MapPin className="mt-1 shrink-0" size={17} />{addressLines(address).join(", ") || "Address not provided"}</p>{mapsQuery && <a className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 px-4 text-sm font-bold" target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`}><ExternalLink size={17} /> Navigate</a>}</div>
             </section>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6"><h2 className="text-lg font-bold">Items ({items.length})</h2><div className="mt-3 divide-y divide-slate-100">{items.map((item, index) => { const product = item.productId || {}; return <div key={item._id || `${product._id}-${index}`} className="flex items-start justify-between gap-3 py-3"><div className="min-w-0"><p className="font-semibold">{product.name || "Product details unavailable"}</p><p className="mt-1 text-sm text-slate-500">{formatOrderItemQuantity(item)}{product.unit && item.sellingType !== "loose" ? ` · ${product.unit}` : ""}</p><p className="mt-1 text-xs text-slate-500">Unit price: {item.sellingType === "loose" && item.purchaseMode === "weight" ? `${currency(product.pricePerKg)} / kg` : currency(product.price)}</p></div><p className="shrink-0 font-bold">{currency(itemLineTotal(item))}</p></div>; })}</div>
+            <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6"><h2 className="text-lg font-bold">Items ({items.length})</h2><div className="mt-3 divide-y divide-slate-100">{items.map((item, index) => { const product = item.productId || {}; return <div key={item._id || `${product._id}-${index}`} className="flex items-start justify-between gap-3 py-3"><div className="min-w-0"><p className="font-semibold">{product.name || "Product details unavailable"}</p><p className="mt-1 text-sm text-slate-500">{formatOrderItemQuantity(item)}{product.unit && item.sellingType !== "loose" ? ` · ${product.unit}` : ""}</p><p className="mt-1 text-xs text-slate-500">Unit price: {item.sellingType === "loose" && item.purchaseMode === "weight" ? `${currency(product.price)} / ${getLoosePriceUnitLabel(product)}` : currency(product.price)}</p></div><p className="shrink-0 font-bold">{currency(itemLineTotal(item))}</p></div>; })}</div>
                 <div className="mt-4 space-y-2 border-t border-slate-200 pt-4 text-sm"><div className="flex justify-between"><span>Subtotal</span><span>{currency(subtotal)}</span></div><div className="flex justify-between"><span>Discount</span><span>−{currency(discount)}</span></div><div className="flex justify-between"><span>Delivery charge{order.deliveryAreaName ? ` · ${order.deliveryAreaName}` : ""}</span><span>{currency(order.deliveryCharge ?? order.otherCharge)}</span></div>{order.deliverySavings > 0 && <div className="flex justify-between text-emerald-700"><span>Free delivery savings</span><span>−{currency(order.deliverySavings)}</span></div>}<div className="flex justify-between"><span>Handling charge</span><span>{currency(order.handlingCharge ?? Math.max(0, Number(order.otherCharge) - Number(order.deliveryCharge || 0)))}</span></div>{order.delivery_time && <p className="text-xs text-slate-500">Estimated delivery: about {order.delivery_time} minutes</p>}<div className="flex justify-between border-t border-slate-200 pt-3 text-base font-bold"><span>Final total</span><span>{currency(order.totalAmt)}</span></div></div>
             </section>
 

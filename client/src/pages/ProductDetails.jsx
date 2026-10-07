@@ -14,6 +14,7 @@ import "swiper/css/pagination";
 import { Pagination } from "swiper/modules";
 import AddToCartButton from "../components/AddToCartButton";
 import { discountedUnitPrice } from "../utils/cartPricing";
+import { getLooseBaseUnitPrice, getLooseDiscountedUnitPrice, getLoosePriceUnitLabel } from "../utils/loosePricing";
 
 function ProductDetails() {
 
@@ -38,7 +39,7 @@ function ProductDetails() {
     const [selectedImage, setSelectedImage] = useState(null);
     const [showMoreDetails, setShowMoreDetails] = useState(false);
 
-    const formattedUnit = /^\d+$/.test(productData?.unit) ? `${productData?.unit} Unit` : productData?.unit;
+    const formattedUnit = productData?.sellingType === "loose" ? getLoosePriceUnitLabel(productData) : (/^\d+$/.test(productData?.unit) ? `${productData?.unit} Unit` : productData?.unit);
 
     const firstDetail = productData?.more_details
         ? Object.entries(productData.more_details)[0]
@@ -226,10 +227,10 @@ function ProductDetails() {
                                     ) : productData?.discount > 0 ? (
                                         <div className="flex items-center gap-1">
                                             <span className="text-md font-bold text-black">
-&#8377;{discountedUnitPrice(productData?.sellingType === "loose" ? productData?.pricePerKg ?? productData?.price : productData?.price, productData?.discount).toFixed(2)}
+&#8377;{productData?.sellingType === "loose" ? getLooseDiscountedUnitPrice(productData).toFixed(2) : discountedUnitPrice(productData?.price, productData?.discount).toFixed(2)}
                                             <span className="text-xs font-bold text-gray-500"> MRP</span>
                                             <span className="text-xs font-bold line-through text-gray-500">
-                                                &#8377;{productData?.price}
+                                                &#8377;{productData?.sellingType === "loose" ? getLooseBaseUnitPrice(productData) : productData?.price}
                                             </span>
                                             </span>
                                             <span className="text-white px-1 rounded bg-[#538CEE] font-semibold text-[x-small]">
@@ -238,7 +239,7 @@ function ProductDetails() {
                                         </div>
                                     ) : (
                                         <span className="text-sm font-medium">
-                                            MRP <span className="font-bold">&#8377;{productData?.price}</span>
+                                        MRP <span className="font-bold">&#8377;{productData?.sellingType === "loose" ? getLooseBaseUnitPrice(productData) : productData?.price}</span>
                                         </span>
                                     )}
                                     <span className="text-[0.8rem] text-[#666666]">(Inclusive of all taxes)</span>
@@ -335,10 +336,10 @@ function ProductDetails() {
                                 <div className="flex items-center gap-1">
                                     <span className="text-md font-bold text-gray-500">MRP</span>
                                     <span className="text-md font-bold line-through text-gray-500">
-                                        &#8377;{productData?.price}
+                                        &#8377;{productData?.sellingType === "loose" ? getLooseBaseUnitPrice(productData) : productData?.price}
                                     </span>
                                     <span className="text-md font-bold text-black">
-&#8377;{discountedUnitPrice(productData?.sellingType === "loose" ? productData?.pricePerKg ?? productData?.price : productData?.price, productData?.discount).toFixed(2)}
+&#8377;{productData?.sellingType === "loose" ? getLooseDiscountedUnitPrice(productData).toFixed(2) : discountedUnitPrice(productData?.price, productData?.discount).toFixed(2)}
                                     </span>
                                     <span className="text-white px-1 rounded bg-[#538CEE] font-semibold text-[x-small]">
                                         {`${productData?.discount}% OFF`}
@@ -346,7 +347,7 @@ function ProductDetails() {
                                 </div>
                             ) : (
                                 <span className="text-sm font-medium">
-                                    MRP <span className="font-bold">&#8377;{productData?.price}</span>
+                                MRP <span className="font-bold">&#8377;{productData?.sellingType === "loose" ? getLooseBaseUnitPrice(productData) : productData?.price}</span>
                                 </span>
                             )}
                             <span className="text-[0.6rem] text-[#666666]">(Inclusive of all taxes)</span>

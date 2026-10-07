@@ -113,6 +113,46 @@ test("loose weight cart linePrice stores the discounted selected weight amount",
     }
 });
 
+test("loose cart converts selected-unit pricing and amount purchases using the discounted rate", async () => {
+    const userId = new mongoose.Types.ObjectId();
+    const productId = new mongoose.Types.ObjectId();
+    const originalFindById = ProductModel.findById;
+    const originalFindOne = CartProductModel.findOne;
+    const originalSave = CartProductModel.prototype.save;
+    const originalUserUpdate = UserModel.updateOne;
+    ProductModel.findById = async () => ({
+        _id: productId,
+        price: 23,
+        priceUnitGrams: 100,
+        pricePerKg: 230,
+        discount: 17,
+        sellingType: "loose",
+        stock: 1,
+        looseConfig: { presetWeightsKg: [0.1], allowCustomWeight: false, allowAmount: true }
+    });
+    CartProductModel.findOne = async () => null;
+    CartProductModel.prototype.save = async function save() { return this; };
+    UserModel.updateOne = async () => ({ acknowledged: true });
+    const response = responseMock();
+
+    try {
+        await addToCartItemController({ userId, body: { productId: String(productId), purchaseMode: "weight", selectedWeightKg: 0.1 } }, response);
+        assert.equal(response.statusCode, 200);
+        assert.equal(response.body.data.linePrice, 19);
+
+        const amountResponse = responseMock();
+        await addToCartItemController({ userId, body: { productId: String(productId), purchaseMode: "amount", amount: 38 } }, amountResponse);
+        assert.equal(amountResponse.statusCode, 200);
+        assert.equal(amountResponse.body.data.selectedWeightKg, 0.2);
+        assert.equal(amountResponse.body.data.linePrice, 38);
+    } finally {
+        ProductModel.findById = originalFindById;
+        CartProductModel.findOne = originalFindOne;
+        CartProductModel.prototype.save = originalSave;
+        UserModel.updateOne = originalUserUpdate;
+    }
+});
+
 test("cart fetch normalizes old packed snapshots and loose line prices to the current sale price", async () => {
     const originalFind = CartProductModel.find;
     const packed = { toObject: () => ({ sellingType: "packed", linePrice: 160, productId: { price: 160, discount: 20 } }) };

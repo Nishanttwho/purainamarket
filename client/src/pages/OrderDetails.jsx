@@ -8,6 +8,7 @@ import { IoMdCopy } from "react-icons/io";
 import { format } from "date-fns";
 import { Printer } from "lucide-react";
 import { formatOrderItemQuantity, getLineTotal, printOrderReceipt } from "../utils/printOrderReceipt";
+import { getLoosePricePerKg } from "../utils/loosePricing";
 
 function OrderDetails() {
     const navigate = useNavigate();
@@ -76,7 +77,7 @@ function OrderDetails() {
             const product = item.productId || {};
             if (item.sellingType === "loose") {
                 if (item.purchaseMode === "amount") return total + (Number(item.amount) || 0);
-                return total + (Number(product.pricePerKg ?? product.price) || 0) * (Number(item.selectedWeightKg) || 0);
+                return total + getLoosePricePerKg(product) * (Number(item.selectedWeightKg) || 0);
             }
             return total + (Number(product.price) || 0) * (Number(item.quantity) || 0);
         }, 0);

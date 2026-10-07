@@ -5,10 +5,13 @@ import { validURLConvertor } from "../utils/validURLConvertor";
 import disscountBannerSVG from "../assets/disscountBanner.svg";
 import AddToCartButton from "./AddToCartButton";
 import { discountedUnitPrice } from "../utils/cartPricing";
+import { getLooseBaseUnitPrice, getLooseDiscountedUnitPrice, getLoosePriceUnitLabel } from "../utils/loosePricing";
 
 function ProductCard({data}) {
 
-    const formattedUnit = /^\d+$/.test(data?.unit) ? `${data.unit} Unit` : data.unit;
+    const formattedUnit = data?.sellingType === "loose" ? getLoosePriceUnitLabel(data) : (/^\d+$/.test(data?.unit) ? `${data.unit} Unit` : data.unit);
+    const looseBasePrice = getLooseBaseUnitPrice(data);
+    const looseSalePrice = getLooseDiscountedUnitPrice(data);
     const url = `products-list/${validURLConvertor(data.name)}-${data._id}`;
 
     return (
@@ -42,20 +45,19 @@ function ProductCard({data}) {
             <div className='text-xs font-medium text-slate-500 flex items-center'>
                 {formattedUnit}
             </div>
-            {data?.sellingType === "loose" && <div className="text-[11px] font-semibold text-[#0C831F]">₹{data.pricePerKg ?? data.price}/kg</div>}
             <div className='mt-1 flex min-w-0 flex-wrap items-center justify-between gap-2'>
                 {
                     data.discount > 0 ? (
                         <div className="flex min-w-0 flex-wrap items-center gap-x-1">
                             <span className="text-[11px] font-bold line-through text-gray-500">
-                                &#8377;{data.price}
+                                {data?.sellingType === "loose" && "MRP "}&#8377;{data?.sellingType === "loose" ? looseBasePrice : data.price}
                             </span>
                             <span className="text-sm font-extrabold text-slate-900">
-                                &#8377;{discountedUnitPrice(data.price, data.discount).toFixed(2)}
+                                &#8377;{data?.sellingType === "loose" ? looseSalePrice.toFixed(2) : discountedUnitPrice(data.price, data.discount).toFixed(2)}{data?.sellingType === "loose" ? ` / ${formattedUnit}` : ""}
                             </span>
                         </div>
                     ) : (
-                        <span className="text-sm font-extrabold text-slate-900">&#8377;{data.price}</span>
+                        <span className="text-sm font-extrabold text-slate-900">&#8377;{data?.sellingType === "loose" ? looseBasePrice : data.price}{data?.sellingType === "loose" ? ` / ${formattedUnit}` : ""}</span>
                     )
                 }
                 <div className="ml-auto w-fit max-w-full shrink-0">

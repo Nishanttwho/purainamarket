@@ -3,6 +3,7 @@ import UserModel from "../models/user.model.js"
 import dotenv from "dotenv";
 import Stripe from "../config/stripe.js";
 import { pricewithDiscount } from "../utils/PriceWithDiscount.js";
+import { getLooseDiscountedPricePerKg, getLoosePricePerKg } from "../utils/loosePricing.js";
 import CartProductModel from "../models/cartProduct.model.js";
 import AddressModel from "../models/address.model.js";
 import razorpayInstance from "../utils/razorpayConfig.js";
@@ -56,9 +57,9 @@ export const buildCheckout = async (userId, deliveryAddressId, couponCode = "", 
 
         if (sellingType === "loose") {
             const config = product.looseConfig || {};
-            const baseRate = Number(product.pricePerKg ?? product.price);
+            const baseRate = getLoosePricePerKg(product);
             if (!Number.isFinite(baseRate) || baseRate <= 0) throw new CheckoutValidationError(`${product.name} has no valid price per kg`);
-            const rate = money(pricewithDiscount(baseRate, Number(product.discount) || 0));
+            const rate = getLooseDiscountedPricePerKg(product);
             if (!Number.isFinite(rate) || rate <= 0) throw new CheckoutValidationError(`${product.name} has no valid sale price per kg`);
             purchaseMode = cartItem.purchaseMode;
 

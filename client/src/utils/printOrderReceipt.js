@@ -1,3 +1,5 @@
+import { getLoosePricePerKg } from "./loosePricing";
+
 const escapeHtml = (value) => String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -13,7 +15,7 @@ export const getLineTotal = (item) => {
     if (!product) return 0;
     if (item.sellingType === "loose") {
         if (item.purchaseMode === "amount") return Number(item.amount) || 0;
-        return (Number(product.pricePerKg) || 0) * (Number(item.selectedWeightKg) || 0);
+        return getLoosePricePerKg(product) * (Number(item.selectedWeightKg) || 0);
     }
     return (Number(product.price) || 0) * (Number(item.quantity) || 0) * (1 - (Number(product.discount) || 0) / 100);
 };

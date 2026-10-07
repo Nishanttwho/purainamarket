@@ -32,8 +32,8 @@ const productSchema = new mongoose.Schema({
         type : Number,
         default : null
     },
-    // Existing products remain packed products.  Loose products use pricePerKg
-    // and expose only the purchase choices enabled by the administrator.
+    // Existing products remain packed products. Loose products retain a legacy
+    // per-kg rate and may also define a selected price basis in priceUnitGrams.
     sellingType : {
         type : String,
         enum : ["packed", "loose"],
@@ -43,6 +43,13 @@ const productSchema = new mongoose.Schema({
         type : Number,
         default : null,
         min : 0
+    },
+    // Price entered for the loose product's selected selling basis (in grams).
+    // Missing values keep older products on the legacy per-kg rate.
+    priceUnitGrams : {
+        type : Number,
+        default : null,
+        enum : [null, 100, 250, 500, 1000]
     },
     looseConfig : {
         presetWeightsKg : { type : [Number], default : [0.25, 0.5, 1, 2, 5] },

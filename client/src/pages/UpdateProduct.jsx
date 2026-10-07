@@ -33,11 +33,12 @@ function UpdateProduct() {
         image: product?.image || [],
         category: product?.category || [],
         subCategory: product?.subCategory || [],
-        unit: product?.unit || "",
+        unit: product?.sellingType === "loose" ? (Number(product?.priceUnitGrams) === 1000 || !product?.priceUnitGrams ? "1 kg" : `${product.priceUnitGrams} g`) : (product?.unit || ""),
         stock: product?.stock ?? "",
-        price: product?.price || "",
+        price: product?.sellingType === "loose" && !product?.priceUnitGrams ? (product?.pricePerKg ?? product?.price ?? "") : (product?.price || ""),
         sellingType: product?.sellingType || "packed",
         pricePerKg: product?.pricePerKg || "",
+        priceUnitGrams: Number(product?.priceUnitGrams) || 1000,
         looseConfig: product?.looseConfig || { presetWeightsKg: [0.25, 0.5, 1, 2, 5], presetAmounts: [10, 50, 100], allowCustomWeight: true, allowAmount: true },
         description: product?.description || "",
         discount: product?.discount || "",
@@ -422,7 +423,7 @@ function UpdateProduct() {
                     {/* Additional Form Fields */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Unit */}
-                        <div className="flex flex-col">
+                        {data.sellingType !== "loose" && <div className="flex flex-col">
                             <label htmlFor="unit" className="text-gray-700 font-medium mb-1">Selling unit</label>
                             <input
                                 type="text"
@@ -433,7 +434,7 @@ function UpdateProduct() {
                                 value={data.unit}
                                 onChange={handleChange}
                             />
-                        </div>
+                        </div>}
 
                         {/* Stock */}
                         <div className="flex flex-col">

@@ -28,6 +28,7 @@ function UploadProduct() {
         price: "",
         sellingType: "packed",
         pricePerKg: "",
+        priceUnitGrams: 1000,
         looseConfig: { presetWeightsKg: [0.25, 0.5, 1, 2, 5], presetAmounts: [10, 50, 100], allowCustomWeight: true, allowAmount: true },
         description: "",
         discount: "",
@@ -429,7 +430,7 @@ function UploadProduct() {
                     {/* Additional Form Fields */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Unit */}
-                        <div className="flex flex-col">
+                        {data.sellingType !== "loose" && <div className="flex flex-col">
                             <label htmlFor="unit" className="text-gray-700 font-medium mb-1">Selling unit</label>
                             <input
                                 type="text"
@@ -440,7 +441,7 @@ function UploadProduct() {
                                 value={data.unit}
                                 onChange={handleChange}
                             />
-                        </div>
+                        </div>}
 
                         {/* Stock */}
                         <div className="flex flex-col">
