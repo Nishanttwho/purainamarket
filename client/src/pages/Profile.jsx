@@ -9,6 +9,7 @@ import { setUserDetails, updateAvatar } from "../store/userSlice";
 import BeatLoader from "react-spinners/BeatLoader";
 import fetchUserDetails from "../utils/fetchUserDetails";
 import Axios from "../utils/Axios";
+import useImageDrop from "../hooks/useImageDrop";
 
 function Profile() {
     const user = useSelector(state => state.user);
@@ -41,6 +42,7 @@ function Profile() {
 
     const handleChangeProfile = async (e) => {
         const file = e.target.files[0];
+        if (!file) return;
         const formData = new FormData();
         formData.append("avatar", file);
 
@@ -63,6 +65,10 @@ function Profile() {
             setLoading(false);
         }
     };
+    const { dragProps, isDragging, onFileInputChange } = useImageDrop(
+        (files) => handleChangeProfile({ target: { files } }),
+        { disabled: loading }
+    );
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -100,8 +106,9 @@ function Profile() {
         <div className="flex flex-col items-center p-6 bg-white shadow-lg rounded-lg w-full max-w-md mx-auto">
             {/* Avatar */}
             <div
+                {...dragProps}
                 className={`w-36 h-36 bg-gray-300 flex items-center justify-center rounded-full overflow-hidden shadow-lg border cursor-pointer relative ${
-                    loading ? "opacity-50 cursor-not-allowed" : ""
+                    loading ? "opacity-50 cursor-not-allowed" : isDragging ? "ring-4 ring-green-500" : ""
                 }`}
                 onMouseEnter={() => setHover(true)}
                 onMouseLeave={() => setHover(false)}
@@ -139,7 +146,8 @@ function Profile() {
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
-                onChange={handleChangeProfile}
+                accept="image/*"
+                onChange={onFileInputChange}
             />
 
 

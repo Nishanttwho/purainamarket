@@ -16,6 +16,7 @@ import summaryApi from "../common/summaryApi";;
 import successAlert from "../utils/successAlert";
 import { useLocation, useNavigate } from "react-router-dom";
 import SellingTypeFields from "../components/SellingTypeFields";
+import useImageDrop from "../hooks/useImageDrop";
 
 function UpdateProduct() {
 
@@ -137,6 +138,10 @@ function UpdateProduct() {
             setLoading(false);
         }
     };
+    const { dragProps, isDragging, onFileInputChange } = useImageDrop(
+        (files) => handleUploadImage({ target: { files, value: "" } }),
+        { multiple: true, disabled: loading }
+    );
         
     // Log updated state after change
     // useEffect(() => {
@@ -221,7 +226,8 @@ function UpdateProduct() {
                         <div>
                             {/* Upload image */}
                             <label 
-                                className="bg-gray-300 h-24 border-gray-300 rounded flex justify-center items-center hover:bg-gray-400 transition"
+                                {...dragProps}
+                                className={`bg-gray-300 h-24 border-gray-300 rounded flex justify-center items-center hover:bg-gray-400 transition ${isDragging ? "ring-4 ring-green-500 bg-green-100" : ""}`}
                                 htmlFor="productImage"
                             >
                                 <div className="text-center flex justify-around items-center flex-col cursor-pointer hover:scale-110 transition">
@@ -256,7 +262,7 @@ function UpdateProduct() {
                                     id="productImage"
                                     className="hidden"
                                     accept="image/*"
-                                    onChange={handleUploadImage} // Ensure handleUploadImage supports multiple files
+                                    onChange={onFileInputChange}
                                 />
                             </label>
 

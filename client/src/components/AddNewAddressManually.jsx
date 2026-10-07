@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import Axios from "../utils/Axios";
 import summaryApi from "../common/summaryApi";
 import AxiosToastError from "../utils/AxiosToastError";
+import { useAddress } from "../provider/AddressContext";
 
 // Images
 import home from "../assets/home.avif";
@@ -17,6 +18,7 @@ import other from "../assets/other.avif";
 function AddNewAddressManually({ setOpenAddNewAddressMenu, setIsAddressMenuOpen }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const { fetchAddress } = useAddress();
 
     const [addressData, setAddressData] = useState({
         saveAs: "home",
@@ -26,9 +28,9 @@ function AddNewAddressManually({ setOpenAddNewAddressMenu, setIsAddressMenuOpen 
         area: "",
         landmark: "",
         city: "",
-        state: "",
+        state: "Uttar Pradesh",
         pincode: "",
-        country: "",
+        country: "India",
         name: "",
         mobileNumber: "",
         latitude: "0.0",
@@ -70,6 +72,7 @@ function AddNewAddressManually({ setOpenAddNewAddressMenu, setIsAddressMenuOpen 
             });
 
             if (response.data.success) {
+                await fetchAddress();
                 toast.success(response.data.message);
                 if (location.pathname === "/add-new-address") {
                     navigate(-1);
@@ -163,9 +166,7 @@ function AddNewAddressManually({ setOpenAddNewAddressMenu, setIsAddressMenuOpen 
                         </TextField>
                         <TextField label="Landmark (Optional)" fullWidth value={addressData.landmark} onChange={handleChange("landmark")} />
                         <TextField label="City" fullWidth value={addressData.city} onChange={handleChange("city")} />
-                        <TextField label="State" fullWidth value={addressData.state} onChange={handleChange("state")} />
                         <TextField label="Pincode" fullWidth value={addressData.pincode} onChange={handleChange("pincode")} />
-                        <TextField label="Country" fullWidth value={addressData.country} onChange={handleChange("country")} />
                         <TextField label="Name" fullWidth value={addressData.name} onChange={handleChange("name")} />
                         <TextField label="Mobile Number" fullWidth value={addressData.mobileNumber} onChange={handleChange("mobileNumber")} />
                     </div>

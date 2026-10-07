@@ -43,9 +43,12 @@ function CheckOutButton({grandTotal, totalItems, setIsAddressMenuOpen, setIsCart
                                     <div className="flex flex-col">
                                         <p className="text-sm font-semibold">Delivering to {capitalizeFirstLetter(defaultAddress.saveAs)}</p>
                                         <p className="text-xs text-gray-500">
-                                            {[defaultAddress?.street, defaultAddress?.flatHouseNumber, defaultAddress?.floor, defaultAddress?.landmark, `${defaultAddress?.city}-${defaultAddress?.pincode}`]
-                                                .filter(Boolean)
-                                                .join(", ")}
+                                            {[
+                                                defaultAddress?.area,
+                                                [defaultAddress?.street, defaultAddress?.flatHouseNumber, defaultAddress?.floor, defaultAddress?.landmark, `${defaultAddress?.city}-${defaultAddress?.pincode}`]
+                                                    .filter(Boolean)
+                                                    .join(", "),
+                                            ].filter(Boolean).join(" • ")}
                                         </p>
                                     </div>
                                 </div>

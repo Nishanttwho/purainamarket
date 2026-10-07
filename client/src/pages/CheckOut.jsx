@@ -200,7 +200,10 @@ function CheckOut() {
                         <h3 className="text-xl text-[#676767] font-semibold">Delivery Address</h3>
                         <p className="text-sm text-gray-400">
                             <span className="font-semibold">{defaultAddress?.saveAs}: </span>
-                            <span>{[defaultAddress?.street, defaultAddress?.flatHouseNumber, defaultAddress?.floor, defaultAddress?.landmark, `${defaultAddress?.city}-${defaultAddress?.pincode}`].filter(Boolean).join(", ")}
+                            <span>{[
+                                defaultAddress?.area,
+                                [defaultAddress?.street, defaultAddress?.flatHouseNumber, defaultAddress?.floor, defaultAddress?.landmark, `${defaultAddress?.city}-${defaultAddress?.pincode}`].filter(Boolean).join(", "),
+                            ].filter(Boolean).join(" • ")}
                             </span>
                         </p>
                     </div>

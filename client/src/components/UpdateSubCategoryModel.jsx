@@ -12,6 +12,7 @@ import BeatLoader from "react-spinners/BeatLoader";
 import { FaPlus } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { useSelector } from "react-redux";
+import useImageDrop from "../hooks/useImageDrop";
 
 function UpdateSubCategoryModel({ close, subCategory, fetchSubCategories}) {
 
@@ -54,6 +55,10 @@ function UpdateSubCategoryModel({ close, subCategory, fetchSubCategories}) {
             setLoading(false); // Stop loading
         }
     };
+    const { dragProps, isDragging, onFileInputChange } = useImageDrop(
+        (files) => handleUploadSubCategoryImage({ target: { files } }),
+        { disabled: loading }
+    );
 
     const handleImageClick = () => {
         if (!data.image && !loading) {
@@ -160,7 +165,8 @@ function UpdateSubCategoryModel({ close, subCategory, fetchSubCategories}) {
                                     <div className="flex flex-col lg:flex-row lg:items-center sm:justify-start lg:gap-4">
                                         {/* Clickable Image Upload Box */}
                                         <div
-                                            className="border border-gray-300 bg-blue-50 h-36 w-36 flex items-center justify-center overflow-hidden rounded-md cursor-pointer relative"
+                                            {...dragProps}
+                                            className={`border border-gray-300 bg-blue-50 h-36 w-36 flex items-center justify-center overflow-hidden rounded-md cursor-pointer relative ${isDragging ? "ring-4 ring-green-500 bg-green-100" : ""}`}
                                             onMouseEnter={() => setHover(true)}
                                             onMouseLeave={() => setHover(false)}
                                             onClick={handleImageClick}
@@ -193,7 +199,8 @@ function UpdateSubCategoryModel({ close, subCategory, fetchSubCategories}) {
                                                 type="file"
                                                 ref={fileInputRef}
                                                 className="hidden"
-                                                onChange={handleUploadSubCategoryImage}
+                                                accept="image/*"
+                                                onChange={onFileInputChange}
                                             />
                                         )}
                                     </div>

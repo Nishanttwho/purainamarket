@@ -10,6 +10,7 @@ import deleteImage from "../utils/deleteImage";
 import toast from "react-hot-toast";
 import Axios from "../utils/Axios";
 import summaryApi from "../common/summaryApi";;
+import useImageDrop from "../hooks/useImageDrop";
 
 function UploadCategoryModel({ close, fetchCategory }) {
     const [data, setData] = useState({
@@ -56,6 +57,10 @@ function UploadCategoryModel({ close, fetchCategory }) {
             setLoading(false); // Stop loading
         }
     };
+    const { dragProps, isDragging, onFileInputChange } = useImageDrop(
+        (files) => handleUploadCategoryImage({ target: { files } }),
+        { disabled: loading }
+    );
 
     const handleImageClick = () => {
         if (!data.image && !loading) {
@@ -159,7 +164,8 @@ function UploadCategoryModel({ close, fetchCategory }) {
                             <div className="flex flex-col lg:flex-row lg:items-center sm:justify-start lg:gap-4">
                                 {/* Clickable Image Upload Box */}
                                 <div
-                                    className="border border-gray-300 bg-blue-50 h-36 w-36 flex items-center justify-center overflow-hidden rounded-md cursor-pointer relative"
+                                    {...dragProps}
+                                    className={`border border-gray-300 bg-blue-50 h-36 w-36 flex items-center justify-center overflow-hidden rounded-md cursor-pointer relative ${isDragging ? "ring-4 ring-green-500 bg-green-100" : ""}`}
                                     onMouseEnter={() => setHover(true)}
                                     onMouseLeave={() => setHover(false)}
                                     onClick={handleImageClick}
@@ -192,7 +198,8 @@ function UploadCategoryModel({ close, fetchCategory }) {
                                         type="file"
                                         ref={fileInputRef}
                                         className="hidden"
-                                        onChange={handleUploadCategoryImage}
+                                        accept="image/*"
+                                        onChange={onFileInputChange}
                                     />
                                 )}
                             </div>

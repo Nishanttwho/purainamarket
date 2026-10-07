@@ -35,9 +35,9 @@ const EditAddressManually = ({ data, setOpenEditAddressMenu }) => { // eslint-di
         area: addressDataSource.area || "",
         landmark: addressDataSource.landmark || "",
         city: addressDataSource.city || "",
-        state: addressDataSource.state || "",
+        state: addressDataSource.state || "Uttar Pradesh",
         pincode: addressDataSource.pincode || "",
-        country: addressDataSource.country || "",
+        country: addressDataSource.country || "India",
         name: addressDataSource.name || user?.name || "",
         mobileNumber: addressDataSource.mobileNumber || user?.mobile || "",
         latitude: addressDataSource.latitude || "0.0",
@@ -186,9 +186,7 @@ const EditAddressManually = ({ data, setOpenEditAddressMenu }) => { // eslint-di
                         </TextField>
                         <TextField label="Landmark (Optional)" fullWidth value={addressData.landmark} onChange={handleChange("landmark")} />
                         <TextField label="City" fullWidth value={addressData.city} onChange={handleChange("city")} />
-                        <TextField label="State" fullWidth value={addressData.state} onChange={handleChange("state")} />
                         <TextField label="Pincode" fullWidth value={addressData.pincode} onChange={handleChange("pincode")} />
-                        <TextField label="Country" fullWidth value={addressData.country} onChange={handleChange("country")} />
                         <TextField label="Name" fullWidth value={addressData.name} onChange={handleChange("name")} />
                         <TextField label="Mobile Number" fullWidth value={addressData.mobileNumber} onChange={handleChange("mobileNumber")} />
                     </div>
