@@ -1,31 +1,15 @@
 /* eslint-disable react/prop-types */
 import { BiArrowBack } from "react-icons/bi";
 import { FaPlus } from "react-icons/fa";
-import home from "../assets/home.avif";
-import hotel from "../assets/hotel.avif";
-import other from "../assets/other.avif";
-import work from "../assets/work.avif";
+import { CiLocationOn } from "react-icons/ci";
 import { MdOutlineModeEdit, MdOutlineDelete } from "react-icons/md";
 import { useAddress } from "../provider/AddressContext";
-import { useEffect } from "react";
 import Axios from "../utils/Axios";
 import summaryApi from "../common/summaryApi";
 import toast from "react-hot-toast";
 
 function AddressMenu({ setIsAddressMenuOpen, setOpenAddNewAddressMenu, setOpenEditAddressMenu }) {
-    const { addresses, fetchAddress } = useAddress();
-
-    useEffect(() => {
-        fetchAddress();
-    }, []);
-
-    const imageMap = { home, hotel, work, other };
-    const getAddressImage = (type) => imageMap[type?.toLowerCase()] || other;
-
-    const capitalizeFirstLetter = (str) => {
-        if (!str) return "";
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    };
+    const { addresses, fetchAddress, isAddressLoading } = useAddress();
 
     const handleDeleteAddress = async (address) => {
         try {
@@ -38,7 +22,7 @@ function AddressMenu({ setIsAddressMenuOpen, setOpenAddNewAddressMenu, setOpenEd
             
             if(response.data.success) {
                 toast.success(response.data.message)
-                fetchAddress()
+                await fetchAddress()
             } else {
                 toast.error(response.data.message)
             }
@@ -60,7 +44,7 @@ function AddressMenu({ setIsAddressMenuOpen, setOpenAddNewAddressMenu, setOpenEd
             
             if(response.data.success) {
                 toast.success(response.data.message)
-                fetchAddress()
+                await fetchAddress()
             }else {
                 toast.error(response.data.message)
             }
@@ -94,31 +78,28 @@ function AddressMenu({ setIsAddressMenuOpen, setOpenAddNewAddressMenu, setOpenEd
                 </div>
 
                 <p className="text-[#666666] text-sm px-5 mt-4 font-semibold">Your saved address</p>
-                {addresses.length > 0 && (
+                {isAddressLoading ? <p className="px-5 py-4 text-sm text-gray-500">Loading saved addresses…</p> : addresses.length > 0 ? (
                     <div>
                         {addresses.map((address, index) => (
                             <div 
                                 key={index} 
                                 className={`flex flex-col p-2 mx-4 mt-3 rounded-xl ${address.defaultAddress ? "border border-[#0C831F] bg-[#E8F5E9]" : "bg-white"}`}
-                                onClick={() => handleSetDefaultAddress(address)}
                             >
                                 <div className="flex gap-3">
-                                    <img
-                                        src={getAddressImage(address?.saveAs)}
-                                        alt={address?.saveAs}
-                                        className="w-8 h-8 p-2 bg-[#F2F2F2] rounded-lg"
-                                    />
+                                    <CiLocationOn size={28} className="shrink-0 rounded-lg bg-[#F2F2F2] p-1" aria-hidden="true" />
                                     <div className="flex flex-col gap-2">
                                         <div className="flex flex-col">
-                                            <p className="text-sm font-semibold">{capitalizeFirstLetter(address?.saveAs)}</p>
+                                            <p className="text-sm font-semibold">{[address?.flatHouseNumber, address?.street].filter(Boolean).join(", ") || "Saved address"}{address.defaultAddress ? " · Default" : ""}</p>
                                             <p className="text-xs text-gray-500">
-                                                {[address?.street, address?.flatHouseNumber, address?.floor, address?.landmark, `${address?.city}-${address?.pincode}`]
+                                                {[address?.area, address?.floor, address?.landmark, address?.city && address?.pincode ? `${address.city}-${address.pincode}` : address?.city || address?.pincode]
                                                     .filter(Boolean)
                                                     .join(", ")}
                                             </p>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {!address.defaultAddress && <button type="button" className="text-xs font-semibold text-[#0C831F]" onClick={() => handleSetDefaultAddress(address)}>Set as default</button>}
                                             <button
+                                                type="button"
                                                 className="text-[#0C831F] w-6 p-1 border border-gray-200 rounded-full"
                                                 onClick={(event) => {
                                                     event.stopPropagation(); // Prevent triggering handleSetDefaultAddress
@@ -129,6 +110,7 @@ function AddressMenu({ setIsAddressMenuOpen, setOpenAddNewAddressMenu, setOpenEd
                                             </button>
 
                                             <button
+                                                type="button"
                                                 className="text-red-500 w-6 p-1 border border-gray-200 rounded-full"
                                                 onClick={(event) => {
                                                     event.stopPropagation(); // Prevent triggering handleSetDefaultAddress
@@ -143,7 +125,7 @@ function AddressMenu({ setIsAddressMenuOpen, setOpenAddNewAddressMenu, setOpenEd
                             </div>
                         ))}
                     </div>
-                )}
+                ) : <p className="px-5 py-4 text-sm text-gray-500">No saved addresses yet.</p>}
             </div>
         </section>
     );

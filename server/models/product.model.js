@@ -49,10 +49,15 @@ const productSchema = new mongoose.Schema({
     priceUnitGrams : {
         type : Number,
         default : null,
-        enum : [null, 100, 250, 500, 1000]
+        validate : {
+            validator : value => value === null || value === undefined || [100, 250, 500, 1000].includes(value),
+            message : "Pricing unit must be 100, 250, 500, or 1000 grams."
+        }
     },
     looseConfig : {
-        presetWeightsKg : { type : [Number], default : [0.25, 0.5, 1, 2, 5] },
+        presetWeightsGrams : { type : [Number], default : null },
+        // Legacy field retained so older product documents remain readable.
+        presetWeightsKg : { type : [Number], default : null },
         allowCustomWeight : { type : Boolean, default : true },
         allowAmount : { type : Boolean, default : true },
         presetAmounts : { type : [Number], default : [10, 50, 100] }

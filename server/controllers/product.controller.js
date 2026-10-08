@@ -1,5 +1,5 @@
 import ProductModel from "../models/product.model.js"
-import { LOOSE_PRICE_UNITS_GRAMS } from "../utils/loosePricing.js";
+import { LOOSE_PRICE_UNITS_GRAMS, normalizeLooseConfig } from "../utils/loosePricing.js";
 
 export const addProductController = async (req, res) => {
     try {
@@ -13,7 +13,6 @@ export const addProductController = async (req, res) => {
             stock,
             price,
             sellingType = "packed",
-            pricePerKg,
             priceUnitGrams,
             looseConfig,
             description,
@@ -45,8 +44,7 @@ export const addProductController = async (req, res) => {
         if (sellingType === "loose") {
             const basisWasSent = priceUnitGrams !== undefined && priceUnitGrams !== null && priceUnitGrams !== "";
             const validBasisPrice = Number.isFinite(Number(price)) && Number(price) > 0;
-            const validLegacyRate = Number.isFinite(Number(pricePerKg)) && Number(pricePerKg) > 0;
-            if ((basisWasSent && (!hasPriceBasis || !validBasisPrice)) || (!basisWasSent && !validLegacyRate)) {
+            if (!basisWasSent || !hasPriceBasis || !validBasisPrice) {
                 return res.status(400).json({ message: "A loose product needs a valid price and selling unit.", error: true, success: false });
             }
         }
@@ -88,11 +86,9 @@ export const addProductController = async (req, res) => {
             stock,
             price,
             sellingType,
-            pricePerKg: sellingType === "loose"
-                ? (hasPriceBasis ? Number(price) * 1000 / looseUnitGrams : Number(pricePerKg))
-                : null,
+            pricePerKg: sellingType === "loose" ? Number(price) * 1000 / looseUnitGrams : null,
             priceUnitGrams: sellingType === "loose" && hasPriceBasis ? looseUnitGrams : null,
-            looseConfig: sellingType === "loose" ? looseConfig : undefined,
+            looseConfig: sellingType === "loose" ? normalizeLooseConfig(looseConfig) : undefined,
             description,
             discount,
             more_details,
@@ -181,15 +177,17 @@ export const updateProductController = async (req, res) => {
             });
         }
 
-        if (data.sellingType === "loose" && data.priceUnitGrams !== undefined) {
-            const unitGrams = Number(data.priceUnitGrams);
-            const unitPrice = Number(data.price);
+        if (data.sellingType === "loose") {
+            const legacyPrice = data.priceUnitGrams == null && Number.isFinite(Number(data.pricePerKg)) ? Number(data.pricePerKg) : null;
+            const unitGrams = data.priceUnitGrams == null ? 1000 : Number(data.priceUnitGrams);
+            const unitPrice = legacyPrice ?? Number(data.price);
             if (!LOOSE_PRICE_UNITS_GRAMS.includes(unitGrams) || !Number.isFinite(unitPrice) || unitPrice <= 0) {
                 return res.status(400).json({ message: "A loose product needs a valid price and selling unit.", error: true, success: false });
             }
             data.price = unitPrice;
             data.pricePerKg = unitPrice * 1000 / unitGrams;
             data.priceUnitGrams = unitGrams;
+            if (data.looseConfig) data.looseConfig = normalizeLooseConfig(data.looseConfig);
         }
         
         const updatedProduct = await ProductModel.findByIdAndUpdate(id, data, {new: true});

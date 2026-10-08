@@ -144,7 +144,11 @@ export const CartProvider = ({ children }) => {
     const addCartItem = async (product, payload = {}) => {
         const productId = String(product?._id || "");
         const owner = userIdRef.current;
-        if (!productId || !owner) return null;
+        if (!owner) {
+            toast.error("Please log in to add products to your cart.");
+            return null;
+        }
+        if (!productId) return null;
         const isLoose = product.sellingType === "loose";
         const sameSelection = (item) => productIdOf(item) === productId && (isLoose
             ? item.sellingType === "loose"

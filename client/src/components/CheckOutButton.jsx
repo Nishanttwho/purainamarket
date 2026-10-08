@@ -8,16 +8,12 @@ function CheckOutButton({grandTotal, totalItems, setIsAddressMenuOpen, setIsCart
 
     const navigate = useNavigate()
 
-    const { addresses } = useAddress();
+    const { addresses, isAddressLoading } = useAddress();
     // console.log(addresses);
     const defaultAddress = addresses.find(address => address.defaultAddress) || addresses[0];
 
-    const capitalizeFirstLetter = (str) => {
-        if (!str) return "";
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    };
-
     const handleProceed = () => {
+        if (isAddressLoading) return;
         if(addresses.length > 0) {
             navigate("/checkout",  { state: { grandTotal, totalItems, totalPriceWithOutDiscount, otherCharge } })
             setIsCartMenuOpen(false)
@@ -33,7 +29,9 @@ function CheckOutButton({grandTotal, totalItems, setIsAddressMenuOpen, setIsCart
                 <div className="fixed bottom-1 right-0 bg-white px-4 py-3 rounded-2xl shadow-lg border border-gray-300 mt-3 lg:min-w-[35vw] lg:max-w-[36vw] md:w-full sm:w-full xs:w-full">
                 <div>
                     {
-                        addresses.length === 0 ? (
+                        isAddressLoading ? (
+                            <p className="pb-5 text-sm text-gray-500">Loading saved address…</p>
+                        ) : addresses.length === 0 ? (
                             <div>
                             </div>
                         ) : (
@@ -41,11 +39,11 @@ function CheckOutButton({grandTotal, totalItems, setIsAddressMenuOpen, setIsCart
                                 <div className="flex gap-2">
                                     <CiLocationOn size={25} />
                                     <div className="flex flex-col">
-                                        <p className="text-sm font-semibold">Delivering to {capitalizeFirstLetter(defaultAddress.saveAs)}</p>
+                                        <p className="text-sm font-semibold">Delivery address</p>
                                         <p className="text-xs text-gray-500">
                                             {[
                                                 defaultAddress?.area,
-                                                [defaultAddress?.street, defaultAddress?.flatHouseNumber, defaultAddress?.floor, defaultAddress?.landmark, `${defaultAddress?.city}-${defaultAddress?.pincode}`]
+                                                [defaultAddress?.street, defaultAddress?.flatHouseNumber, defaultAddress?.floor, defaultAddress?.landmark, defaultAddress?.city && defaultAddress?.pincode ? `${defaultAddress.city}-${defaultAddress.pincode}` : defaultAddress?.city || defaultAddress?.pincode]
                                                     .filter(Boolean)
                                                     .join(", "),
                                             ].filter(Boolean).join(" • ")}

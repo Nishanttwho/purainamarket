@@ -2,11 +2,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
 import { IoSearch } from "react-icons/io5";
-import home from "../assets/home.avif"
-import hotel from "../assets/hotel.avif"
-import other from "../assets/other.avif"
-import work from "../assets/work.avif"
-import { AiFillCloseCircle } from "react-icons/ai";
 import TextField from '@mui/material/TextField';
 import { BiCurrentLocation } from "react-icons/bi";
 import { IoCloseCircleSharp } from "react-icons/io5";
@@ -44,12 +39,10 @@ function EditAddress({data, setOpenEditAddressMenu}) {
     const [address, setAddress] = useState("");
     const [area, setArea] = useState("");
     const [map, setMap] = useState(null);
-    const [saveAddressAs, setSaveAddressAs] = useState(addressDataSource.saveAs || "");
-    const [openOtherAsSaveAddressAs, setOpenOtherAsSaveAddressAs] = useState(false);
     const [isManualEditing, setIsManualEditing] = useState(false);
     const [addressData, setAddressData] = useState({
         _id: addressDataSource._id,
-        saveAs: addressDataSource.saveAs || "",
+        saveAs: addressDataSource.saveAs || "address",
         flatHouseNumber: addressDataSource.flatHouseNumber || "",
         floor: addressDataSource.floor || "",
         street: addressDataSource.street || "",
@@ -200,10 +193,6 @@ function EditAddress({data, setOpenEditAddressMenu}) {
             });
         }
     };
-
-    useEffect(() => {
-        setAddressData((prev) => ({ ...prev, saveAs: saveAddressAs }));
-    }, [saveAddressAs]);
 
     const extractArea = (place) => {
         for (const component of place.address_components) {
@@ -437,75 +426,6 @@ function EditAddress({data, setOpenEditAddressMenu}) {
                         </button>
                     </div>
                     <div className="mt-4 pb-8">
-                        <p className="text-sm text-gray-400 pb-2">Save address as *</p>
-                        {/* Address Save Options */}
-                        {
-                            openOtherAsSaveAddressAs ? (
-                                <div className="pb-5 flex items-baseline gap-2">
-                                    <button
-                                        className={`flex items-center shadow-md p-2 gap-1 rounded-lg  border-1 bg-[#EBFFEF] border-green-700`}
-                                        onClick={() => setOpenOtherAsSaveAddressAs(false)}
-                                    >
-                                        <img src={other} alt="" className="w-5 h-5" />
-                                        <span>Other</span>
-                                    </button>
-                                    <div className="border-b-2 border-gray-400">
-                                        <input
-                                            type="text"
-                                            className=" focus:outline-none"
-                                            placeholder="Save as"
-                                            onChange={(e) => setSaveAddressAs(e.target.value)}
-                                        />
-                                        {saveAddressAs.length > 0 && (
-                                            <button
-                                                className="pr-4"
-                                                onClick={() => {
-                                                    setSaveAddressAs("home")
-                                                    setOpenOtherAsSaveAddressAs(false)
-                                                }}
-                                            >
-                                                <AiFillCloseCircle size={20} className="text-gray-300" />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="flex gap-2 flex-wrap">
-                                    <button
-                                        className={`flex items-center shadow-md p-2 gap-1 rounded-lg  border-1  ${saveAddressAs === "home" ? "bg-[#EBFFEF] border-green-700" : "bg-white border-gray-200"}`}
-                                        onClick={() => setSaveAddressAs("home")}
-                                    >
-                                        <img src={home} alt="" className="w-5 h-5" />
-                                        <span>Home</span>
-                                    </button>
-                                    <button
-                                        className={`flex items-center shadow-md p-2 gap-1 rounded-lg  border-1  ${saveAddressAs === "work" ? "bg-[#EBFFEF] border-green-700" : "bg-white border-gray-200"}`}
-                                        onClick={() => setSaveAddressAs("work")}
-
-                                    >
-                                        <img src={work} alt="" className="w-5 h-5" />
-                                        <span>Work</span>
-                                    </button>
-                                    <button
-                                        className={`flex items-center shadow-md p-2 gap-1 rounded-lg  border-1  ${saveAddressAs === "hotel" ? "bg-[#EBFFEF] border-green-700" : "bg-white border-gray-200"}`}
-                                        onClick={() => setSaveAddressAs("hotel")}
-                                    >
-                                        <img src={hotel} alt="" className="w-5 h-5" />
-                                        <span>Hotel</span>
-                                    </button>
-                                    <button
-                                        className={`flex items-center shadow-md p-2 gap-1 rounded-lg  border-1  ${saveAddressAs === "other" ? "bg-[#EBFFEF] border-green-700" : "bg-white border-gray-200"}`}
-                                        onClick={() => {
-                                            setSaveAddressAs("other")
-                                            setOpenOtherAsSaveAddressAs(true)
-                                        }}
-                                    >
-                                        <img src={other} alt="" className="w-5 h-5" />
-                                        <span>Other</span>
-                                    </button>
-                                </div>
-                            )
-                        }
                         {/* Address Fields */}
                         <div className="flex flex-col gap-3 mt-3">
                             {/* Flat / House No / Building Name */}

@@ -81,7 +81,7 @@ test("uses a loose product's selected 100 g price basis for weight and amount ch
         priceUnitGrams: 100,
         pricePerKg: 230,
         discount: 17,
-        looseConfig: { presetWeightsKg: [0.1], allowCustomWeight: false, allowAmount: true },
+        looseConfig: { presetWeightsGrams: [100], allowCustomWeight: false, allowAmount: true },
         stock: 1,
     });
     mockCheckoutData({ cart: [
@@ -93,6 +93,26 @@ test("uses a loose product's selected 100 g price basis for weight and amount ch
     assert.equal(checkout.itemList[1].selectedWeightKg, 0.2);
     assert.equal(checkout.itemList[1].linePrice, 38);
     assert.equal(checkout.subTotalAmt, 57);
+});
+
+test("validates gram preset weights and calculates 250 g, 500 g, and 1 kg selections", async () => {
+    const basisProduct = product({
+        sellingType: "loose",
+        price: 23,
+        priceUnitGrams: 100,
+        pricePerKg: 230,
+        discount: 17,
+        looseConfig: { presetWeightsGrams: [250, 500, 1000], allowCustomWeight: false, allowAmount: true },
+        stock: 2,
+    });
+    mockCheckoutData({ cart: [
+        { productId: basisProduct, purchaseMode: "weight", selectedWeightKg: 0.25, amount: null },
+        { productId: basisProduct, purchaseMode: "weight", selectedWeightKg: 0.5, amount: null },
+        { productId: basisProduct, purchaseMode: "weight", selectedWeightKg: 1, amount: null },
+    ] });
+    const checkout = await buildCheckout(userId, addressId);
+    assert.deepEqual(checkout.itemList.map((item) => item.linePrice), [47.5, 95, 190]);
+    assert.equal(checkout.subTotalAmt, 332.5);
 });
 
 test("uses the highest enabled category handling fee and applies the selected area's free-delivery threshold", async () => {

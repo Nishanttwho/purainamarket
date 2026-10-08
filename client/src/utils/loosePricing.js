@@ -1,5 +1,17 @@
 import { discountedUnitPrice } from "./priceMath.js";
 
+export const DEFAULT_PRESET_WEIGHTS_GRAMS = [250, 500, 1000, 2000, 5000];
+
+export const getPresetWeightsGrams = (config = {}) => {
+    if (Array.isArray(config.presetWeightsGrams)) {
+        return config.presetWeightsGrams.map(Number).filter((value) => Number.isFinite(value) && value > 0);
+    }
+    if (Array.isArray(config.presetWeightsKg)) {
+        return config.presetWeightsKg.map((value) => Number(value) * 1000).filter((value) => Number.isFinite(value) && value > 0);
+    }
+    return DEFAULT_PRESET_WEIGHTS_GRAMS;
+};
+
 export const getLoosePriceBasis = (product = {}) => {
     const unitGrams = Number(product.priceUnitGrams);
     const basisPrice = Number(product.price);

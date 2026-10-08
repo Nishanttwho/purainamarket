@@ -15,7 +15,6 @@ import AxiosToastError from "./utils/AxiosToastError";
 import CartButtonForMobile from "./components/CartButtonForMobile"
 import CartSideMenu from "./components/CartSideMenu";
 import AddressMenu from "./components/AddressMenu";
-import { setAddresses } from "./store/addressSlice";
 import AddNewAddressManually from "./components/AddNewAddressManually";
 import EditAddressManually from "./components/EditAddressManually";
 import StoreStatusBanner from "./components/StoreStatusBanner";
@@ -107,28 +106,11 @@ function App() {
     }
   }
 
-  const fetchAddress = async () => {
-    try {
-      const response = await Axios({
-        ...summaryApi.getAddress,
-      })
-      // console.log("response: ", response);
-
-      if (response.data.success) {
-        dispatch(setAddresses(response.data.data))
-      }
-
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
   useEffect(() => {
     fetchUser()
     if (!location.pathname.startsWith("/rider")) {
       fetchCategory()
       fetchSubCategory()
-      fetchAddress()
     }
   }, [])
 
@@ -143,7 +125,7 @@ function App() {
       <StoreAvailabilityProvider>
         <main className={isAdminArea || isRiderArea ? "dashboard-route-main" : `min-h-[77vh] w-full bg-white ${["/", "/cart", "/checkout"].includes(location.pathname) ? "pt-8 lg:pt-2" : ""}`}>
           <StoreStatusBanner hidden={isAdminArea || isRiderArea} />
-          <Outlet fetchAddress={fetchAddress} context={{ setIsLoginOpen, isUserReady }} />
+          <Outlet context={{ setIsLoginOpen, isUserReady }} />
         </main>
       </StoreAvailabilityProvider>
 

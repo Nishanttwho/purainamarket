@@ -32,7 +32,7 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
     const [custonTipInput, setCustonTipInput] = useState(0)
 
     const { cartSyncVersion, isCartSyncing } = userCart()
-    const { addresses } = useAddress();
+    const { addresses, isAddressLoading } = useAddress();
     const defaultAddress = addresses.find(address => address.defaultAddress) || addresses[0];
     const cartKey = JSON.stringify(cartItem.map(item => [item._id, item.quantity, item.purchaseMode, item.selectedWeightKg, item.amount]));
     const totalItems = cartItem.reduce((total, item) => total + (item.sellingType === "loose" ? 1 : Number(item.quantity) || 0), 0);
@@ -384,7 +384,7 @@ function CartSideMenu({ setIsCartMenuOpen, setIsAddressMenuOpen, setIsCartButton
                                         totalPriceWithOutDiscount={totalPriceWithOutDiscount}
                                         totalPriceWithDiscount={totalPriceWithDiscount}
                                         otherCharge={otherCharge}
-                                        disabled={addresses.length > 0 && (!quoteIsCurrent || isCartSyncing)}
+                                        disabled={isAddressLoading || (addresses.length > 0 && (!quoteIsCurrent || isCartSyncing))}
                                     />
                                 </div>
                             ) : (

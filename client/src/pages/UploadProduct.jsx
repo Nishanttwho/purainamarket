@@ -29,7 +29,7 @@ function UploadProduct() {
         sellingType: "packed",
         pricePerKg: "",
         priceUnitGrams: 1000,
-        looseConfig: { presetWeightsKg: [0.25, 0.5, 1, 2, 5], presetAmounts: [10, 50, 100], allowCustomWeight: true, allowAmount: true },
+        looseConfig: { presetWeightsGrams: [250, 500, 1000, 2000, 5000], presetAmounts: [10, 50, 100], allowCustomWeight: true, allowAmount: true },
         description: "",
         discount: "",
         more_details: {},

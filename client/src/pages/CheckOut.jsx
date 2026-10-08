@@ -1,9 +1,9 @@
 /* eslint-disable no-undef */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAddress } from "../provider/AddressContext";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Banknote, CheckCircle2, CreditCard } from "lucide-react";
+import { Banknote, CheckCircle2, CreditCard, MapPin } from "lucide-react";
 import toast from "react-hot-toast"
 import Axios from "../utils/Axios";
 import summaryApi from "../common/summaryApi";
@@ -15,7 +15,7 @@ import { getLooseBaseUnitPrice, getLooseDiscountedUnitPrice, getLoosePriceUnitLa
 function CheckOut() {
 
     const user = useSelector(state => state.user);
-    const { addresses } = useAddress()
+    const { addresses, isAddressLoading } = useAddress()
     const { clearTheCart } = userCart()
     const { availability } = useStoreAvailability();
     const canPlaceOrder = availability?.isOpen === true;
@@ -28,7 +28,7 @@ function CheckOut() {
     const cartItem = useSelector((state) => state.cartItem.cart);
     // console.log("cartItem", cartItem);
 
-    const defaultAddress = addresses.find((address) => address.defaultAddress === true)
+    const defaultAddress = addresses.find((address) => address.defaultAddress === true) || addresses[0]
     // console.log("defaultAddress: ", defaultAddress)
 
     const [optionOpen, setOptionOpen] = useState("")
@@ -36,7 +36,15 @@ function CheckOut() {
     const [isConfirmationScreenActive, setIsConfirmationScreenActive] = useState("")
     const [loading, setLoading] = useState(false)
 
+    useEffect(() => {
+        if (!isAddressLoading && !defaultAddress) {
+            toast.error("Please add a delivery address to continue.");
+            navigate("/dashboard/addresses", { replace: true, state: { returnToCheckout: true, checkoutState: location.state || {} } });
+        }
+    }, [isAddressLoading, defaultAddress, navigate, location.state]);
+
     const handleCashOnDeliveryOrder = async () => {
+        if (!defaultAddress?._id) return toast.error("Please select a delivery address.");
         try {
             const response = await Axios({
                 ...summaryApi.createCODOrder,
@@ -68,6 +76,7 @@ function CheckOut() {
     }
 
     const handleRazorpayPayment = async () => {
+        if (!defaultAddress?._id) return toast.error("Please select a delivery address.");
         try {
             const response = await Axios({
                 ...summaryApi.addRazorpayPaymentOrder,
@@ -162,6 +171,19 @@ function CheckOut() {
                 <div className="w-full lg:w-2/3 xl:w-2/3 p-4 sm:p-6 rounded-2xl bg-white">
                     <p className="mb-1 text-xs font-bold uppercase tracking-wider text-emerald-700">Secure checkout</p>
                     <h2 className="text-xl lg:text-2xl font-bold mb-5 text-slate-900">Choose how to pay</h2>
+                    <section className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-4" aria-label="Delivery address">
+                        <div className="flex items-start gap-3">
+                            <MapPin size={20} className="mt-0.5 shrink-0 text-emerald-700" />
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-bold text-slate-900">Delivery address</p>
+                                {isAddressLoading ? <p className="mt-1 text-sm text-slate-500">Loading saved address…</p> : defaultAddress ? <p className="mt-1 text-sm text-slate-600">{[
+                                    defaultAddress.area,
+                                    [defaultAddress.flatHouseNumber, defaultAddress.floor, defaultAddress.street, defaultAddress.landmark, defaultAddress.city && defaultAddress.pincode ? `${defaultAddress.city}-${defaultAddress.pincode}` : defaultAddress.city || defaultAddress.pincode].filter(Boolean).join(", "),
+                                ].filter(Boolean).join(" · ")}</p> : <p className="mt-1 text-sm text-slate-500">No saved address.</p>}
+                            </div>
+                            <button type="button" className="shrink-0 text-sm font-semibold text-emerald-700" onClick={() => navigate("/dashboard/addresses", { state: { returnToCheckout: true, checkoutState: location.state || {} } })}>Change</button>
+                        </div>
+                    </section>
                     <div className="grid gap-3">
                         {/* COD Method */}
                         <button type="button" aria-expanded={optionOpen === "cash"} className={`w-full rounded-2xl border p-4 text-left transition ${selectedPaymentMethod === "cash" ? "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-100" : "border-slate-200 hover:border-emerald-300"}`} onClick={() => {
@@ -200,10 +222,9 @@ function CheckOut() {
                     <div className="px-6 pb-5">
                         <h3 className="text-xl text-[#676767] font-semibold">Delivery Address</h3>
                         <p className="text-sm text-gray-400">
-                            <span className="font-semibold">{defaultAddress?.saveAs}: </span>
                             <span>{[
                                 defaultAddress?.area,
-                                [defaultAddress?.street, defaultAddress?.flatHouseNumber, defaultAddress?.floor, defaultAddress?.landmark, `${defaultAddress?.city}-${defaultAddress?.pincode}`].filter(Boolean).join(", "),
+                                [defaultAddress?.street, defaultAddress?.flatHouseNumber, defaultAddress?.floor, defaultAddress?.landmark, defaultAddress?.city && defaultAddress?.pincode ? `${defaultAddress.city}-${defaultAddress.pincode}` : defaultAddress?.city || defaultAddress?.pincode].filter(Boolean).join(", "),
                             ].filter(Boolean).join(" • ")}
                             </span>
                         </p>

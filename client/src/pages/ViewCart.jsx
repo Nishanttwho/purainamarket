@@ -9,7 +9,7 @@ import AddToCartButton from "../components/AddToCartButton";
 import { FaChevronRight } from "react-icons/fa6";
 import { useAddress } from "../provider/AddressContext";
 import { CiLocationOn } from "react-icons/ci";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import { ArrowLeft, Clock3, PackageCheck, Trash2, Truck } from "lucide-react";
 import toast from "react-hot-toast";
 import Axios from "../utils/Axios";
@@ -19,17 +19,12 @@ import "./ViewCart.css";
 import { discountedUnitPrice, getCartOriginalTotal, getCartSubtotal } from "../utils/cartPricing";
 import { getLooseBaseUnitPrice, getLooseDiscountedUnitPrice, getLoosePriceUnitLabel } from "../utils/loosePricing";
 function ViewCart() {
-
-    const capitalizeFirstLetter = (str) => {
-        if (!str) return "";
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    };
-
     const navigate = useNavigate()
     const location = useLocation();
+    const outletContext = useOutletContext();
     const { availability } = useStoreAvailability();
     
-    const { addresses } = useAddress();
+    const { addresses, isAddressLoading } = useAddress();
     // console.log(addresses);
     const defaultAddress = addresses.find(address => address.defaultAddress) || addresses[0];
 
@@ -52,7 +47,7 @@ function ViewCart() {
     const [couponLoading, setCouponLoading] = useState(false);
     const autoApplyAttempted = useRef(false);
     const { deleteCartItem, isCartLoading, isCartSyncing, cartSyncVersion } = userCart()
-    const loading = isCartLoading;
+    const loading = isCartLoading || outletContext?.isUserReady === false;
 
     const cartKey = JSON.stringify(cartItem.map((item) => [item._id, item.quantity, item.purchaseMode, item.selectedWeightKg, item.amount]));
     const quoteIsCurrent = !isCartSyncing && quoteSnapshot.cartKey === cartKey && quoteSnapshot.version === cartSyncVersion && quoteSnapshot.addressId === String(defaultAddress?._id || "");
@@ -112,8 +107,11 @@ function ViewCart() {
     }, [location.pathname, location.state, loading, cartItem.length, navigate, applyCouponCode]);
 
     useEffect(() => {
-        if (!cartItem.length || isCartSyncing || cartItem.some(item => item.optimistic)) {
-            if (!cartItem.length) setCheckoutQuote(null);
+        if (isAddressLoading || !defaultAddress?._id || !cartItem.length || isCartSyncing || cartItem.some(item => item.optimistic)) {
+            if (!cartItem.length || !defaultAddress?._id) {
+                setCheckoutQuote(null);
+                setQuoteLoading(false);
+            }
             return undefined;
         }
         let active = true;
@@ -128,7 +126,7 @@ function ViewCart() {
             .catch((error) => { if (active) setCouponError(error.response?.data?.message || "Could not refresh checkout charges."); })
             .finally(() => { if (active) setQuoteLoading(false); });
         return () => { active = false; };
-    }, [cartKey, cartItem, defaultAddress?._id, appliedCoupon?.code, cartSyncVersion, isCartSyncing]);
+    }, [cartKey, cartItem, defaultAddress?._id, appliedCoupon?.code, cartSyncVersion, isCartSyncing, isAddressLoading]);
 
 
     return (
@@ -459,7 +457,7 @@ function ViewCart() {
                                                     <div className="flex gap-2">
                                                         <CiLocationOn size={25} />
                                                         <div className="flex flex-col">
-                                                            <p className="text-sm font-semibold">Delivering to {capitalizeFirstLetter(defaultAddress.saveAs)}</p>
+                                                            <p className="text-sm font-semibold">Delivery address</p>
                                                             <p className="text-xs text-gray-500">
                                                                 {[
                                                                     defaultAddress?.area,
@@ -485,12 +483,13 @@ function ViewCart() {
                                     <div className={`cart-checkout-button-wrap flex justify-center text-white px-2 py-4 rounded-xl ${availability?.isOpen === true ? "bg-[#0C831F]" : "bg-slate-400"}`}>
                                         <button
                                             className="flex items-center gap-1 disabled:cursor-not-allowed"
-                                            disabled={quoteLoading || isCartSyncing || !quoteIsCurrent || !checkoutQuote}
+                                            disabled={isAddressLoading || quoteLoading || isCartSyncing || (addresses.length > 0 && (!quoteIsCurrent || !checkoutQuote))}
                                             onClick={() => {
                                                 if (availability?.isOpen !== true) {
                                                     toast.error(availability?.message || "Ordering is currently unavailable.");
                                                     return;
                                                 }
+                                                if (isAddressLoading) return;
                                                 if(addresses.length > 0) {
                                                     navigate("/checkout", { state: { grandTotal, totalItems, totalPriceWithOutDiscount, totalPriceWithDiscount, otherCharge, couponCode: appliedCoupon?.code || "", couponDiscount: appliedCoupon?.discountAmount || 0 } })
                                                 } else {

@@ -9,19 +9,13 @@ import summaryApi from "../common/summaryApi";
 import AxiosToastError from "../utils/AxiosToastError";
 import { useAddress } from "../provider/AddressContext";
 
-// Images
-import home from "../assets/home.avif";
-import work from "../assets/work.avif";
-import hotel from "../assets/hotel.avif";
-import other from "../assets/other.avif";
-
 function AddNewAddressManually({ setOpenAddNewAddressMenu, setIsAddressMenuOpen }) {
     const navigate = useNavigate();
     const location = useLocation();
     const { fetchAddress } = useAddress();
 
     const [addressData, setAddressData] = useState({
-        saveAs: "home",
+        saveAs: "address",
         flatHouseNumber: "",
         floor: "",
         street: "",
@@ -38,7 +32,6 @@ function AddNewAddressManually({ setOpenAddNewAddressMenu, setIsAddressMenuOpen 
         defaultAddress: true,
     });
 
-    const [openOtherAsSaveAddressAs, setOpenOtherAsSaveAddressAs] = useState(false);
     const [deliveryAreas, setDeliveryAreas] = useState([]);
     const [areasLoading, setAreasLoading] = useState(true);
 
@@ -74,7 +67,9 @@ function AddNewAddressManually({ setOpenAddNewAddressMenu, setIsAddressMenuOpen 
             if (response.data.success) {
                 await fetchAddress();
                 toast.success(response.data.message);
-                if (location.pathname === "/add-new-address") {
+                if (location.state?.returnToCheckout) {
+                    navigate("/checkout", { replace: true, state: location.state?.checkoutState || {} });
+                } else if (location.pathname === "/add-new-address") {
                     navigate(-1);
                 } else {
                     setIsAddressMenuOpen(true);
@@ -99,60 +94,6 @@ function AddNewAddressManually({ setOpenAddNewAddressMenu, setIsAddressMenuOpen 
                         <IoCloseCircleSharp size={25} />
                     </button>
                 </div>
-
-                {/* Save As Tags */}
-                <div className="mt-4 pb-2">
-                    <p className="text-sm text-gray-400 pb-2">Save address as *</p>
-                    <div className="flex gap-2 flex-wrap">
-                        {["home", "work", "hotel"].map((label) => (
-                            <button
-                                key={label}
-                                className={`flex items-center shadow-md p-2 gap-1 rounded-lg border ${
-                                    addressData.saveAs === label
-                                        ? "bg-[#EBFFEF] border-green-700"
-                                        : "bg-white border-gray-200"
-                                }`}
-                                onClick={() => {
-                                    setAddressData((prev) => ({ ...prev, saveAs: label }));
-                                    setOpenOtherAsSaveAddressAs(false);
-                                }}
-                            >
-                                <img
-                                    src={label === "home" ? home : label === "work" ? work : hotel}
-                                    alt={label}
-                                    className="w-5 h-5"
-                                />
-                                <span className="capitalize">{label}</span>
-                            </button>
-                        ))}
-                        <button
-                            className={`flex items-center shadow-md p-2 gap-1 rounded-lg border ${
-                                addressData.saveAs === "other"
-                                    ? "bg-[#EBFFEF] border-green-700"
-                                    : "bg-white border-gray-200"
-                            }`}
-                            onClick={() => {
-                                setAddressData((prev) => ({ ...prev, saveAs: "other" }));
-                                setOpenOtherAsSaveAddressAs(true);
-                            }}
-                        >
-                            <img src={other} alt="Other" className="w-5 h-5" />
-                            <span>Other</span>
-                        </button>
-                    </div>
-                </div>
-
-                {/* Optional "Other" Text Field */}
-                {openOtherAsSaveAddressAs && (
-                    <div className="mt-2">
-                        <TextField
-                            label="Save As (Custom)"
-                            fullWidth
-                            value={addressData.saveAs}
-                            onChange={handleChange("saveAs")}
-                        />
-                    </div>
-                )}
 
                 {/* Form Fields */}
                 <div className="mt-4 space-y-3">

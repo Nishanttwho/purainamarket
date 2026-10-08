@@ -3,7 +3,7 @@ import UserModel from "../models/user.model.js"
 import dotenv from "dotenv";
 import Stripe from "../config/stripe.js";
 import { pricewithDiscount } from "../utils/PriceWithDiscount.js";
-import { getLooseDiscountedPricePerKg, getLoosePricePerKg } from "../utils/loosePricing.js";
+import { getLooseDiscountedPricePerKg, getLoosePricePerKg, getPresetWeightsGrams } from "../utils/loosePricing.js";
 import CartProductModel from "../models/cartProduct.model.js";
 import AddressModel from "../models/address.model.js";
 import razorpayInstance from "../utils/razorpayConfig.js";
@@ -65,7 +65,7 @@ export const buildCheckout = async (userId, deliveryAddressId, couponCode = "", 
 
             if (purchaseMode === "weight") {
                 selectedWeightKg = Number(cartItem.selectedWeightKg);
-                const isPreset = (config.presetWeightsKg || []).some((weight) => Number(weight) === selectedWeightKg);
+                const isPreset = getPresetWeightsGrams(config).some((weightGrams) => Math.abs(weightGrams - selectedWeightKg * 1000) < 0.5);
                 if (!Number.isFinite(selectedWeightKg) || selectedWeightKg <= 0 || (!isPreset && !config.allowCustomWeight)) {
                     throw new CheckoutValidationError(`The selected weight for ${product.name} is no longer available`);
                 }

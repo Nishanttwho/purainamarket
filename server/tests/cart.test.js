@@ -128,7 +128,7 @@ test("loose cart converts selected-unit pricing and amount purchases using the d
         discount: 17,
         sellingType: "loose",
         stock: 1,
-        looseConfig: { presetWeightsKg: [0.1], allowCustomWeight: false, allowAmount: true }
+        looseConfig: { presetWeightsGrams: [100], allowCustomWeight: false, allowAmount: true }
     });
     CartProductModel.findOne = async () => null;
     CartProductModel.prototype.save = async function save() { return this; };

@@ -212,7 +212,7 @@ const router = createBrowserRouter([
             },
             {
                 path: "cart",
-                element: <ProtectedRoute element={<ViewCart />} allowedRoles={["USER", "ADMIN", "RIDER"]} />
+                element: <ViewCart />
             },
             // {
             //     path: "address",

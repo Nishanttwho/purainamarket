@@ -1,7 +1,10 @@
 /* eslint-disable react/prop-types */
+import { getPresetWeightsGrams } from "../utils/loosePricing";
+
 function SellingTypeFields({ data, setData }) {
-    const config = data.looseConfig || { presetWeightsKg: [0.25, 0.5, 1, 2, 5], presetAmounts: [10, 50, 100], allowCustomWeight: true, allowAmount: true };
-    const updateConfig = (key, value) => setData((prev) => ({ ...prev, looseConfig: { ...config, [key]: value } }));
+    const config = data.looseConfig || { presetWeightsGrams: [250, 500, 1000, 2000, 5000], presetAmounts: [10, 50, 100], allowCustomWeight: true, allowAmount: true };
+    const presetWeightsGrams = getPresetWeightsGrams(config);
+    const updateConfig = (key, value) => setData((prev) => ({ ...prev, looseConfig: { ...prev.looseConfig, [key]: value } }));
 
     return (
         <section className="admin-selling-config">
@@ -42,9 +45,9 @@ function SellingTypeFields({ data, setData }) {
                         <input type="number" min="0" step="0.01" value={data.price || ""} onChange={(event) => setData((prev) => ({ ...prev, price: event.target.value, pricePerKg: Number(event.target.value) * 1000 / Number(prev.priceUnitGrams || 1000) }))} placeholder="Enter price for this unit" />
                     </label>
                     <label className="admin-form-field">
-                        <span>Preset weights (kg)</span>
+                        <span>Preset weights (g)</span>
                         <small>Enter comma-separated choices shown to customers.</small>
-                        <input value={(config.presetWeightsKg || []).join(", ")} onChange={(event) => updateConfig("presetWeightsKg", event.target.value.split(",").map(Number).filter((value) => value > 0))} placeholder="0.25, 0.5, 1, 2, 5" />
+                        <input value={presetWeightsGrams.join(", ")} onChange={(event) => setData((prev) => ({ ...prev, looseConfig: { ...prev.looseConfig, presetWeightsGrams: event.target.value.split(",").map(Number).filter((value) => Number.isFinite(value) && value > 0), presetWeightsKg: undefined } }))} placeholder="250, 500, 1000, 2000, 5000" />
                     </label>
                     <fieldset className="admin-purchase-options">
                         <legend>Customer purchase options</legend>

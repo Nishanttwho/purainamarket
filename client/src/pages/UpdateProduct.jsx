@@ -17,6 +17,7 @@ import successAlert from "../utils/successAlert";
 import { useLocation, useNavigate } from "react-router-dom";
 import SellingTypeFields from "../components/SellingTypeFields";
 import useImageDrop from "../hooks/useImageDrop";
+import { getPresetWeightsGrams } from "../utils/loosePricing";
 
 function UpdateProduct() {
 
@@ -39,7 +40,9 @@ function UpdateProduct() {
         sellingType: product?.sellingType || "packed",
         pricePerKg: product?.pricePerKg || "",
         priceUnitGrams: Number(product?.priceUnitGrams) || 1000,
-        looseConfig: product?.looseConfig || { presetWeightsKg: [0.25, 0.5, 1, 2, 5], presetAmounts: [10, 50, 100], allowCustomWeight: true, allowAmount: true },
+        looseConfig: product?.looseConfig
+            ? { ...product.looseConfig, presetWeightsGrams: getPresetWeightsGrams(product.looseConfig), presetWeightsKg: undefined }
+            : { presetWeightsGrams: [250, 500, 1000, 2000, 5000], presetAmounts: [10, 50, 100], allowCustomWeight: true, allowAmount: true },
         description: product?.description || "",
         discount: product?.discount || "",
         more_details: product?.more_details || {},

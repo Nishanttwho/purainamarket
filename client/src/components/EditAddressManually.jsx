@@ -6,12 +6,6 @@ import { toast } from "react-hot-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
-// Assets
-import home from "../assets/home.avif";
-import hotel from "../assets/hotel.avif";
-import other from "../assets/other.avif";
-import work from "../assets/work.avif";
-
 import summaryApi from "../common/summaryApi";
 import AxiosToastError from "../utils/AxiosToastError";
 import { useAddress } from "../provider/AddressContext";
@@ -28,7 +22,7 @@ const EditAddressManually = ({ data, setOpenEditAddressMenu }) => { // eslint-di
     
     const [addressData, setAddressData] = useState({
         _id: addressDataSource._id || "",
-        saveAs: addressDataSource.saveAs || "",
+        saveAs: addressDataSource.saveAs || "address",
         flatHouseNumber: addressDataSource.flatHouseNumber || "",
         floor: addressDataSource.floor || "",
         street: addressDataSource.street || "",
@@ -45,7 +39,6 @@ const EditAddressManually = ({ data, setOpenEditAddressMenu }) => { // eslint-di
         defaultAddress: addressDataSource.defaultAddress || false,
     });
 
-    const [openOtherAsSaveAddressAs, setOpenOtherAsSaveAddressAs] = useState(addressData.saveAs === "other");
     const [deliveryAreas, setDeliveryAreas] = useState([]);
     const [areasLoading, setAreasLoading] = useState(true);
 
@@ -96,9 +89,10 @@ const EditAddressManually = ({ data, setOpenEditAddressMenu }) => { // eslint-di
             });
 
             if (response.data.success) {
-                fetchAddress();
+                await fetchAddress();
                 toast.success(response.data.message);
-                handleClose()
+                if (location.state?.returnToCheckout) navigate("/checkout", { replace: true, state: location.state?.checkoutState || {} });
+                else handleClose();
             } else {
                 toast.error(response.data.message);
             }
@@ -119,59 +113,6 @@ const EditAddressManually = ({ data, setOpenEditAddressMenu }) => { // eslint-di
                         <IoCloseCircleSharp size={25} />
                     </button>
                 </div>
-
-                {/* Save As Tags */}
-                <div className="mt-4 pb-2">
-                    <p className="text-sm text-gray-400 pb-2">Save address as *</p>
-                    <div className="flex gap-2 flex-wrap">
-                        {["home", "work", "hotel"].map((label) => (
-                            <button
-                                key={label}
-                                className={`flex items-center shadow-md p-2 gap-1 rounded-lg border ${
-                                    addressData.saveAs === label
-                                        ? "bg-[#EBFFEF] border-green-700"
-                                        : "bg-white border-gray-200"
-                                }`}
-                                onClick={() => {
-                                    setAddressData((prev) => ({ ...prev, saveAs: label }));
-                                    setOpenOtherAsSaveAddressAs(false);
-                                }}
-                            >
-                                <img
-                                    src={label === "home" ? home : label === "work" ? work : hotel}
-                                    alt={label}
-                                    className="w-5 h-5"
-                                />
-                                <span className="capitalize">{label}</span>
-                            </button>
-                        ))}
-                        <button
-                            className={`flex items-center shadow-md p-2 gap-1 rounded-lg border ${
-                                addressData.saveAs === "other"
-                                    ? "bg-[#EBFFEF] border-green-700"
-                                    : "bg-white border-gray-200"
-                            }`}
-                            onClick={() => {
-                                setAddressData((prev) => ({ ...prev, saveAs: "other" }));
-                                setOpenOtherAsSaveAddressAs(true);
-                            }}
-                        >
-                            <img src={other} alt="Other" className="w-5 h-5" />
-                            <span>Other</span>
-                        </button>
-                    </div>
-                </div>
-
-                {openOtherAsSaveAddressAs && (
-                    <div className="mt-2">
-                        <TextField
-                            label="Save As (Custom)"
-                            fullWidth
-                            value={addressData.saveAs}
-                            onChange={handleChange("saveAs")}
-                        />
-                    </div>
-                )}
 
                 {/* Form Inputs */}
                 <div className="mt-4 space-y-3">

@@ -1,7 +1,7 @@
 import UserModel from "../models/user.model.js"
 import CartProductModel from "../models/cartProduct.model.js"
 import ProductModel from "../models/product.model.js"
-import { getLooseDiscountedPricePerKg, getLoosePricePerKg } from "../utils/loosePricing.js";
+import { getLooseDiscountedPricePerKg, getLoosePricePerKg, getPresetWeightsGrams } from "../utils/loosePricing.js";
 
 const isDatabaseObjectId = value => /^[a-f\d]{24}$/i.test(String(value || ""));
 const money = value => Number(Number(value || 0).toFixed(2));
@@ -14,7 +14,7 @@ const looseLineDetails = (product, purchaseMode, selectedWeightKg, amount) => {
     if (purchaseMode === "weight") {
         const weight = Number(selectedWeightKg);
         if (!Number.isFinite(weight) || weight <= 0) throw new Error("Choose a valid weight.");
-        const isPreset = (config.presetWeightsKg || []).some(value => Number(value) === weight);
+        const isPreset = getPresetWeightsGrams(config).some(value => Math.abs(value - weight * 1000) < 0.5);
         if (!isPreset && !config.allowCustomWeight) throw new Error("Custom weights are not available for this product.");
         const discountedRate = getLooseDiscountedPricePerKg(product);
         return { purchaseMode, selectedWeightKg: weight, amount: null, linePrice: money(weight * discountedRate) };
